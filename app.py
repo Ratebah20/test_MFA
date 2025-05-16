@@ -13,7 +13,7 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=2)
 
 # Configuration
 PORTAIL_API_URL = 'https://acc.portail.orange.lu'
-MOCK_API = os.environ.get('MOCK_API', 'true').lower() == 'true'  # Mode simulation par défaut
+MOCK_API = os.environ.get('MOCK_API', 'false').lower() == 'true'  # Mode réel par défaut
 
 # Fonction de décoration pour les routes qui nécessitent une authentification
 def login_required(f):
@@ -90,21 +90,17 @@ def validate_otp():
         }), 400
     
     try:
-        # En mode simulation, utiliser les réponses mockées
-        if MOCK_API:
-            response_data = mock_resolve_otp(otp_token)
-        else:
-            # Appel réel à l'API du Portail Orange
-            response = requests.post(
-                f"{PORTAIL_API_URL}/resolve-otp",
-                json={"otp_token": otp_token, "source": "selfcare"},
-                headers={
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                timeout=10
-            )
-            response_data = response.json()
+        # Appel réel à l'API du Portail Orange
+        response = requests.post(
+            f"{PORTAIL_API_URL}/resolve-otp",
+            json={"otp_token": otp_token, "source": "selfcare"},
+            headers={
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            timeout=10
+        )
+        response_data = response.json()
         
         # Si la validation est réussie, stocker les tokens en session
         if response_data.get('success'):

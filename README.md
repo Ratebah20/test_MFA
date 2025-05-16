@@ -1,6 +1,6 @@
-# Simulation d'intégration Selfcare avec OTP
+# Intégration Selfcare avec OTP
 
-Ce projet simule une intégration entre le Portail Orange (système MFA) et une application externe (Selfcare) en utilisant la méthode OTP. Il a été créé pour tester et démontrer le processus de redirection et validation des tokens OTP conformément à la documentation technique.
+Ce projet implémente une intégration réelle entre le Portail Orange (système MFA) et une application externe (Selfcare) en utilisant la méthode OTP. Il permet de tester le processus complet de redirection et validation des tokens OTP conformément à la documentation technique.
 
 ## Fonctionnalités
 
@@ -47,7 +47,7 @@ Ce projet simule une intégration entre le Portail Orange (système MFA) et une 
 L'application peut être configurée à l'aide de variables d'environnement :
 
 - `PORT` : Port sur lequel l'application s'exécute (par défaut : 5000)
-- `MOCK_API` : Simule les réponses API sans appeler le serveur réel (`true` ou `false`, par défaut : `true`)
+- `MOCK_API` : Active le mode simulation si nécessaire pour les tests (`true` ou `false`, par défaut : `false`)
 - `PORTAIL_API_URL` : URL de l'API du Portail Orange (par défaut : `https://acc.portail.orange.lu`)
 
 ## Déploiement sur Render

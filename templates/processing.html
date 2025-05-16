@@ -38,7 +38,11 @@
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
-            body: JSON.stringify({ otp_token: otpToken })
+            body: JSON.stringify({ 
+                otp_token: otpToken,
+                source: 'selfcare'
+            }),
+            credentials: 'include'
         })
         .then(response => response.json())
         .then(data => {
