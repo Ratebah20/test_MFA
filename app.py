@@ -10,11 +10,25 @@ import datetime as dt
 
 app = Flask(__name__)
 
+# Configuration des logs plus détaillés
+if not app.debug:
+    # Configurer le logger pour écrire dans un fichier
+    file_handler = logging.FileHandler('error.log')
+    file_handler.setLevel(logging.INFO)
+    # Format avec horodatage et informations de requête
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s [%(remote_addr)s]')
+    file_handler.setFormatter(formatter)
+    app.logger.addHandler(file_handler)
+    app.logger.setLevel(logging.INFO)
+
 # Configuration de l'application
 app.secret_key = os.environ.get('SECRET_KEY', 'selfcare_external_site_key')  # En production, utilisez une clé secrète sécurisée
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=2)
+
+# Activer le débogage des requêtes pour voir toutes les requêtes entrantes
+app.config['DEBUG_REQUESTS'] = True
 
 # Configuration de l'intégration avec Portail Orange
 PORTAIL_API_URL = os.environ.get('PORTAIL_API_URL', 'https://acc.portail.orange.lu')
@@ -180,36 +194,66 @@ def validate_otp():
     API pour valider le token OTP auprès du serveur MFA
     Cette fonction représente le cœur de l'intégration entre Selfcare et le Portail Orange
     """
-    data = request.json
-    otp_token = data.get('otp_token')
-    source = data.get('source', 'selfcare')
+    app.logger.info(f"Requête POST reçue sur /validate-otp avec Content-Type: {request.headers.get('Content-Type')}")
     
-    if not otp_token:
-        app.logger.warning("Tentative de validation sans token OTP")
+    try:
+        # Vérifier le format de la requête
+        if not request.is_json:
+            app.logger.error(f"Requête non-JSON reçue: {request.data[:100]}")
+            return jsonify({
+                "success": False,
+                "message": "Format de requête invalide, JSON attendu"
+            }), 400
+        
+        # Récupérer les données
+        data = request.json
+        app.logger.info(f"Données JSON reçues: {data}")
+        
+        otp_token = data.get('otp_token')
+        source = data.get('source', 'selfcare')
+        
+        if not otp_token:
+            app.logger.warning("Tentative de validation sans token OTP")
+            return jsonify({
+                "success": False,
+                "message": "Token OTP manquant"
+            }), 400
+        
+        # Masquer le token pour les logs
+        masked_token = f"{otp_token[:4]}...{otp_token[-4:] if len(otp_token) > 8 else ''}" 
+        app.logger.info(f"Début de validation pour token: {masked_token}, source: {source}")
+        
+        # Valider le token avec l'API
+        app.logger.info(f"Appel de l'API du Portail Orange: {OTP_RESOLVE_ENDPOINT}")
+        result = validate_token_with_api(otp_token, source)
+        
+        # Si la validation est réussie, stocker les tokens en session
+        if result.get('success'):
+            # Stocker les informations d'authentification dans la session
+            session['access_token'] = result.get('access_token')
+            session['refresh_token'] = result.get('refresh_token')
+            session['token_type'] = result.get('token_type', 'Bearer')
+            session['token_expiry'] = datetime.now().timestamp() + result.get('expires_in', 3600)
+            session['user_id'] = result.get('user_id')
+            
+            app.logger.info(f"Authentification réussie pour l'utilisateur {result.get('user_id')}")
+        else:
+            app.logger.warning(f"Validation OTP échouée: {result.get('message')}")
+        
+        # On retourne le résultat brut de l'API pour que le frontend puisse l'afficher
+        http_status = 200 if result.get('success') else 400
+        app.logger.info(f"Réponse renvoyée au client avec statut HTTP {http_status}")
+        return jsonify(result), http_status
+    
+    except Exception as e:
+        # Capturer toutes les erreurs possibles
+        app.logger.error(f"Exception lors de la validation OTP: {str(e)}")
+        import traceback
+        app.logger.error(f"Traceback: {traceback.format_exc()}")
         return jsonify({
             "success": False,
-            "message": "Token OTP manquant"
-        }), 400
-    
-    # Valider le token avec l'API
-    result = validate_token_with_api(otp_token, source)
-    
-    # Si la validation est réussie, stocker les tokens en session
-    if result.get('success'):
-        # Stocker les informations d'authentification dans la session
-        session['access_token'] = result.get('access_token')
-        session['refresh_token'] = result.get('refresh_token')
-        session['token_type'] = result.get('token_type', 'Bearer')
-        session['token_expiry'] = datetime.now().timestamp() + result.get('expires_in', 3600)
-        session['user_id'] = result.get('user_id')
-        
-        app.logger.info(f"Authentification réussie pour l'utilisateur {result.get('user_id')}")
-    else:
-        app.logger.warning(f"Validation OTP échouée: {result.get('message')}")
-    
-    # On retourne le résultat brut de l'API pour que le frontend puisse l'afficher
-    http_status = 200 if result.get('success') else 400
-    return jsonify(result), http_status
+            "message": f"Erreur serveur lors de la validation: {str(e)}"
+        }), 500
 
 @app.route('/dashboard')
 @login_required
