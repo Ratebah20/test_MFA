@@ -44,7 +44,19 @@ def login_required(f):
 def index():
     """
     Page d'accueil avec lien vers le Portail Orange pour débuter l'authentification
+    Détecte également les redirections depuis le MFA avec un token OTP en paramètre
     """
+    # Détecter si un token OTP est présent dans l'URL (redirection depuis le Portail Orange)
+    otp_token = request.args.get('otp_token') or request.args.get('token') or request.args.get('code')
+    
+    # Si un token OTP est présent, rediriger vers la route de callback
+    if otp_token:
+        app.logger.info(f"Détection d'un token OTP dans la route racine, redirection vers auth-callback")
+        # Récupérer tous les paramètres pour les transmettre
+        params = request.args.copy()
+        return redirect(url_for('auth_callback', **params))
+    
+    # Affichage normal de la page d'accueil si pas de token OTP
     app.logger.info("Accès à la page d'accueil")
     return render_template('index.html', 
                           mfa_login_url=MFA_LOGIN_URL,
