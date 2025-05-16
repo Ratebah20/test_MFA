@@ -4,6 +4,7 @@ import requests
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from datetime import datetime, timedelta
 from functools import wraps
+import datetime as dt  # Import additionnel pour la date actuelle
 
 app = Flask(__name__)
 app.secret_key = 'selfcare_simulation_secret_key'  # En production, utilisez une clé secrète sécurisée
@@ -55,11 +56,11 @@ def mock_resolve_otp(otp_token):
 # Routes de l'application
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', now=dt.datetime.now())
 
 @app.route('/login')
 def login():
-    return render_template('login.html')
+    return render_template('login.html', now=dt.datetime.now())
 
 @app.route('/auth-callback')
 def auth_callback():
@@ -74,7 +75,7 @@ def auth_callback():
         return redirect(url_for('error', message='missing_token'))
     
     # Passer le token à la page de traitement
-    return render_template('processing.html', otp_token=otp_token)
+    return render_template('processing.html', otp_token=otp_token, now=dt.datetime.now())
 
 @app.route('/validate-otp', methods=['POST'])
 def validate_otp():
@@ -132,7 +133,8 @@ def dashboard():
     return render_template('dashboard.html', 
                           user_id=session.get('user_id'),
                           token_type=session.get('token_type', 'Bearer'),
-                          expires_in=time_remaining)
+                          expires_in=time_remaining,
+                          now=dt.datetime.now())
 
 @app.route('/change-password')
 def change_password():
@@ -150,7 +152,8 @@ def change_password():
     return render_template('change_password.html', 
                           user_id=user_id,
                           token=token,
-                          is_otp=is_otp)
+                          is_otp=is_otp,
+                          now=dt.datetime.now())
 
 @app.route('/set-password', methods=['POST'])
 def set_password():
@@ -197,7 +200,7 @@ def error():
     Page d'erreur générique
     """
     message = request.args.get('message', 'unknown_error')
-    return render_template('error.html', message=message)
+    return render_template('error.html', message=message, now=dt.datetime.now())
 
 @app.route('/api/user-info')
 @login_required
@@ -232,7 +235,7 @@ def simulate_redirect():
         otp_token = os.urandom(16).hex()
     
     redirect_url = url_for('auth_callback', otp_token=otp_token, _external=True)
-    return render_template('simulate_redirect.html', redirect_url=redirect_url, otp_token=otp_token)
+    return render_template('simulate_redirect.html', redirect_url=redirect_url, otp_token=otp_token, now=dt.datetime.now())
 
 @app.route('/simulate-first-login')
 def simulate_first_login():
@@ -243,7 +246,7 @@ def simulate_first_login():
     token = 'otp_' + os.urandom(8).hex()
     
     redirect_url = url_for('change_password', userId=user_id, token=token, isOTP=True, _external=True)
-    return render_template('simulate_redirect.html', redirect_url=redirect_url, otp_token='')
+    return render_template('simulate_redirect.html', redirect_url=redirect_url, otp_token='', now=dt.datetime.now())
 
 if __name__ == '__main__':
     # Créer les dossiers templates et static s'ils n'existent pas
