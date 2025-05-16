@@ -10,25 +10,44 @@
         </div>
         <div class="card-body">
             <div class="process-steps">
-                <div class="step step-current">
+                <!-- Étape 1: Extraction du token -->
+                <div id="step-extraction" class="step step-completed">
+                    <div class="step-icon">
+                        <div class="step-check">✓</div>
+                    </div>
+                    <div class="step-content">
+                        <h3>1. Extraction du token OTP</h3>
+                        <p>Le token OTP a été extrait avec succès de l'URL de redirection.</p>
+                    </div>
+                </div>
+                
+                <!-- Étape 2: Validation du token -->
+                <div id="step-validation" class="step step-current">
                     <div class="step-icon">
                         <div class="loading-spinner"></div>
                     </div>
                     <div class="step-content">
-                        <h3>Validation du token OTP</h3>
-                        <p id="status-message">Validation de l'authentification en cours...</p>
+                        <h3>2. Validation du token OTP</h3>
+                        <p id="status-message">Communication avec le serveur d'authentification...</p>
                     </div>
                 </div>
                 
+                <!-- Détails du token -->
                 <div class="token-details">
                     <h4>Détails de la requête</h4>
                     <div class="code-block">
                         <p><strong>Token OTP reçu :</strong> <code id="token-display">{{ otp_token[:8] }}...</code></p>
                         <p><strong>Source :</strong> <code>{{ source | default("selfcare") }}</code></p>
-                        <p><strong>Endpoint API :</strong> <code>/resolve-otp</code></p>
+                        <p><strong>Endpoint API :</strong> <code>{{ PORTAIL_API_URL }}/resolve-otp</code></p>
                         <p><strong>Méthode :</strong> <code>POST</code></p>
+                        <p><strong>Heure de réception :</strong> <code>{{ now.strftime('%H:%M:%S') }}</code></p>
                     </div>
                 </div>
+            </div>
+
+            <!-- Barre de progression -->
+            <div class="progress-container">
+                <div id="progress-bar" class="progress-bar" style="width: 50%;"></div>
             </div>
             
             <div id="validation-result" style="display: none;">
@@ -67,6 +86,96 @@
 </div>
 {% endblock %}
 
+{% block head %}
+{{ super() }}
+<style>
+    .progress-container {
+        width: 100%;
+        background-color: #f3f3f3;
+        border-radius: 5px;
+        margin: 20px 0;
+        height: 10px;
+    }
+    
+    .progress-bar {
+        height: 10px;
+        background-color: #4CAF50;
+        border-radius: 5px;
+        transition: width 0.5s ease-in-out;
+    }
+    
+    .error-progress {
+        background-color: #f44336;
+    }
+    
+    .process-steps {
+        margin-bottom: 30px;
+    }
+    
+    .step {
+        display: flex;
+        margin-bottom: 15px;
+        align-items: flex-start;
+    }
+    
+    .step-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background-color: #e0e0e0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+    
+    .step-check {
+        color: white;
+        font-weight: bold;
+    }
+    
+    .step-error-icon {
+        color: white;
+        font-weight: bold;
+    }
+    
+    .step-current .step-icon {
+        background-color: #2196F3;
+    }
+    
+    .step-completed .step-icon {
+        background-color: #4CAF50;
+    }
+    
+    .step-error .step-icon {
+        background-color: #f44336;
+    }
+    
+    .loading-spinner {
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    .token-details {
+        margin-top: 20px;
+        margin-left: 45px;
+        background-color: #f9f9f9;
+        padding: 15px;
+        border-radius: 5px;
+        border-left: 4px solid #2196F3;
+    }
+</style>
+{% endblock %}
+
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -80,9 +189,28 @@
         const errorContainer = document.getElementById('error-container');
         const errorMessage = document.getElementById('error-message');
         const actionButtons = document.getElementById('action-buttons');
+        const stepExtraction = document.getElementById('step-extraction');
+        const stepValidation = document.getElementById('step-validation');
+        const progressBar = document.getElementById('progress-bar');
         
         // Mise à jour de l'affichage du token pour raisons de sécurité
-        document.getElementById('token-display').textContent = otpToken.substring(0, 8) + '...' + otpToken.substring(otpToken.length - 4);
+        const tokenDisplay = document.getElementById('token-display');
+        if (tokenDisplay) {
+            if (otpToken.length > 12) {
+                tokenDisplay.textContent = otpToken.substring(0, 8) + '...' + otpToken.substring(otpToken.length - 4);
+            } else {
+                tokenDisplay.textContent = otpToken.substring(0, 4) + '...';
+            }
+        }
+        
+        // Mise à jour de l'étape d'extraction
+        if (otpToken) {
+            stepExtraction.classList.add('step-completed');
+            stepExtraction.querySelector('.step-content p').textContent = 'Le token OTP a été extrait avec succès de l'URL de redirection.';
+        } else {
+            stepExtraction.classList.add('step-error');
+            stepExtraction.querySelector('.step-content p').textContent = 'Erreur: Aucun token OTP n\'a été trouvé dans l\'URL de redirection.';
+        }
         
         // Fonction pour ajouter un bouton
         function addButton(text, href, className) {
@@ -115,6 +243,21 @@
         })
         .then(data => {
             console.log('Données de réponse:', data);
+            
+            // Mettre à jour la barre de progression
+            progressBar.style.width = '100%';
+            
+            // Mettre à jour l'étape de validation
+            stepValidation.classList.remove('step-current');
+            if (data.success) {
+                stepValidation.classList.add('step-completed');
+                stepValidation.querySelector('.step-icon').innerHTML = '<div class="step-check">✓</div>';
+                stepValidation.querySelector('.step-content p').textContent = 'Le token OTP a été validé avec succès par le serveur d\'authentification.';
+            } else {
+                stepValidation.classList.add('step-error');
+                stepValidation.querySelector('.step-icon').innerHTML = '<div class="step-error-icon">✗</div>';
+                stepValidation.querySelector('.step-content p').textContent = 'La validation du token OTP a échoué: ' + (data.message || 'Raison inconnue');
+            }
             
             // Afficher les détails de la réponse
             validationResult.style.display = 'block';
@@ -156,6 +299,16 @@
         })
         .catch(error => {
             console.error('Erreur lors de la validation:', error);
+            
+            // Mettre à jour la barre de progression pour indiquer une erreur
+            progressBar.style.width = '100%';
+            progressBar.classList.add('error-progress');
+            
+            // Mettre à jour l'étape de validation pour montrer l'erreur
+            stepValidation.classList.remove('step-current');
+            stepValidation.classList.add('step-error');
+            stepValidation.querySelector('.step-icon').innerHTML = '<div class="step-error-icon">✗</div>';
+            stepValidation.querySelector('.step-content p').textContent = 'Erreur technique lors de la communication avec le serveur.';
             
             // Affichage des erreurs techniques
             validationResult.style.display = 'block';

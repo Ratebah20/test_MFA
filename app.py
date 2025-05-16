@@ -2,6 +2,7 @@ import os
 import json
 import requests
 import logging
+import uuid
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from datetime import datetime, timedelta
 from functools import wraps
@@ -275,6 +276,32 @@ def user_info():
         "last_login": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
     return jsonify(user_data)
+
+# Route pour la page d'erreur
+@app.route('/error')
+def error():
+    """
+    Page d'erreur qui affiche des informations détaillées sur les erreurs d'authentification
+    Le paramètre 'message' identifie le type d'erreur à afficher
+    """
+    # Récupérer le message d'erreur depuis les paramètres
+    error_message = request.args.get('message', 'unknown_error')
+    error_code = request.args.get('code', 'ERR_UNKNOWN')
+    request_id = str(uuid.uuid4())[:8]  # Générer un ID unique pour cette erreur
+    
+    app.logger.warning(f"Affichage de la page d'erreur: {error_message} (code: {error_code}, request_id: {request_id})")
+    
+    # Dans un environnement de développement, on montre le bouton de simulation
+    show_debug_button = app.debug or os.environ.get('SHOW_DEBUG_TOOLS') == 'true'
+    
+    # Rendre le template avec les informations d'erreur
+    return render_template('error.html', 
+                          message=error_message,
+                          error_code=error_code,
+                          request_id=request_id,
+                          show_debug_button=show_debug_button,
+                          mfa_login_url=MFA_LOGIN_URL,
+                          now=dt.datetime.now())
 
 # Route pour la page de démonstration du processus de redirection
 @app.route('/demo-redirect')

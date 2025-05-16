@@ -21,14 +21,27 @@
                 {% if message == 'missing_token' %}
                     <h2>Token OTP manquant</h2>
                     <p>Aucun token OTP n'a été trouvé dans l'URL de redirection.</p>
-                    <p>Vérifiez que le Portail Orange inclut bien le paramètre <code>otp_token</code> dans l'URL de redirection.</p>
+                    <p>Vérifiez que le Portail Orange inclut bien le paramètre <code>otp_token</code>, <code>token</code> ou <code>code</code> dans l'URL de redirection.</p>
+                    <p><strong>Détail technique:</strong> Le callback doit être appelé avec un paramètre contenant le token.</p>
                 {% elif message == 'invalid_token' %}
                     <h2>Token OTP invalide</h2>
-                    <p>Le token OTP fourni n'est pas valide ou n'a pas pu être vérifié.</p>
+                    <p>Le token OTP fourni n'est pas valide ou n'a pas pu être vérifié par le serveur d'authentification.</p>
                     <p>Assurez-vous que le token n'a pas déjà été utilisé et qu'il n'a pas été altéré.</p>
+                    <p><strong>Détail technique:</strong> L'API du Portail Orange a rejeté le token lors de la validation.</p>
                 {% elif message == 'expired_token' %}
                     <h2>Token OTP expiré</h2>
                     <p>Le token OTP a expiré (durée de validité : 5 minutes).</p>
+                    <p>Veuillez retourner au Portail Orange pour obtenir un nouveau token.</p>
+                    <p><strong>Détail technique:</strong> L'API du Portail Orange a indiqué que ce token n'est plus valide en raison de sa durée de vie dépassée.</p>
+                {% elif message == 'validation_error' %}
+                    <h2>Erreur de validation OTP</h2>
+                    <p>Une erreur s'est produite lors de la validation du token OTP avec le Portail Orange.</p>
+                    <p>Le serveur d'authentification a rencontré un problème lors du traitement de la requête.</p>
+                    <p><strong>Conseil:</strong> Vérifiez la configuration de l'API et les logs du serveur.</p>
+                {% elif message == 'already_used' %}
+                    <h2>Token OTP déjà utilisé</h2>
+                    <p>Ce token OTP a déjà été utilisé pour une authentification précédente.</p>
+                    <p>Pour des raisons de sécurité, chaque token OTP ne peut être utilisé qu'une seule fois.</p>
                     <p>Veuillez retourner au Portail Orange pour obtenir un nouveau token.</p>
                 {% elif message == 'missing_params' %}
                     <h2>Paramètres manquants</h2>
@@ -43,12 +56,24 @@
             
             <div class="error-actions">
                 <a href="{{ url_for('index') }}" class="btn primary-btn">Retour à l'accueil</a>
-                <a href="{{ url_for('simulate_redirect') }}" class="btn secondary-btn">Simuler une nouvelle redirection</a>
+                <a href="{{ mfa_login_url }}" class="btn secondary-btn">Se connecter via le Portail Orange</a>
+                {% if show_debug_button %}
+                <a href="{{ url_for('simulate_redirect') }}" class="btn debug-btn">Simuler une redirection (Debug)</a>
+                {% endif %}
             </div>
             
             <div class="error-help">
                 <h3>Besoin d'aide ?</h3>
-                <p>Si cette erreur persiste, consultez la documentation d'intégration OTP ou contactez l'équipe Orange.</p>
+                <p>Si cette erreur persiste, consultez la <a href="/docs/OTP_Integration_Guide.md" target="_blank">documentation d'intégration OTP</a> ou contactez l'équipe Orange.</p>
+                
+                <div class="technical-details">
+                    <h4>Détails techniques</h4>
+                    <p><strong>Code d'erreur:</strong> {{ error_code|default('ERR_UNKNOWN') }}</p>
+                    <p><strong>Heure:</strong> {{ now.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                    {% if request_id %}
+                    <p><strong>ID de requête:</strong> {{ request_id }}</p>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
