@@ -56,21 +56,110 @@ def auth_callback():
     Point d'entrée pour la redirection depuis le Portail Orange
     Cette route traite le token OTP reçu via l'URL
     """
-    otp_token = request.args.get('otp_token')
+    # Extraire le token OTP de l'URL (plusieurs paramètres possibles selon la configuration du Portail Orange)
+    otp_token = request.args.get('otp_token') or request.args.get('token') or request.args.get('code')
+    
+    source = request.args.get('source', 'selfcare')
     
     if not otp_token:
         app.logger.warning("Tentative d'accès au callback sans token OTP")
         flash('Aucun token OTP trouvé dans l\'URL. La redirection depuis le Portail Orange est incorrecte.', 'error')
         return redirect(url_for('error', message='missing_token'))
     
-    app.logger.info(f"Redirection reçue avec token OTP: {otp_token[:8]}...")
+    # Masquer partiellement le token dans les logs pour des raisons de sécurité
+    masked_token = f"{otp_token[:8]}...{otp_token[-4:] if len(otp_token) > 12 else ''}"
+    app.logger.info(f"Redirection reçue avec token OTP: {masked_token} (source: {source})")
     
-    # Passer le token à la page de traitement
+    # Option: Validation automatique du token sans afficher la page de processing
+    # Décommentez ce bloc pour une validation immédiate sans page intermédiaire
+    """
+    try:
+        # Valider directement le token avec l'API du Portail Orange
+        result = validate_token_with_api(otp_token, source)
+        if result['success']:
+            # Stocker les informations d'authentification dans la session
+            session['access_token'] = result.get('access_token')
+            session['refresh_token'] = result.get('refresh_token', '')
+            session['token_type'] = result.get('token_type', 'Bearer')
+            session['token_expiry'] = datetime.now().timestamp() + result.get('expires_in', 3600)
+            session['user_id'] = result.get('user_id')
+            
+            app.logger.info(f"Authentification réussie pour l'utilisateur {result.get('user_id')}")
+            return redirect(url_for('dashboard'))
+        else:
+            # En cas d'échec, rediriger vers la page d'erreur
+            flash(result.get('message', 'Échec de validation du token OTP.'), 'error')
+            return redirect(url_for('error', message='invalid_token'))
+    except Exception as e:
+        app.logger.error(f"Erreur lors de la validation automatique du token OTP: {str(e)}")
+        flash('Une erreur est survenue lors de la validation du token.', 'error')
+        return redirect(url_for('error', message='validation_error'))
+    """
+    
+    # Passer le token à la page de traitement pour validation interactive
     return render_template('processing.html', 
                           otp_token=otp_token, 
+                          source=source,
                           mfa_login_url=MFA_LOGIN_URL,
                           PORTAIL_API_URL=PORTAIL_API_URL,
                           now=dt.datetime.now())
+
+def validate_token_with_api(otp_token, source='selfcare'):
+    """
+    Fonction utilitaire pour valider un token OTP auprès du Portail Orange API
+    """
+    # Tronquer le token pour les logs pour des raisons de sécurité
+    masked_token = f"{otp_token[:8]}...{otp_token[-4:] if len(otp_token) > 12 else ''}"
+    app.logger.info(f"Validation du token OTP {masked_token} auprès de {OTP_RESOLVE_ENDPOINT}")
+    
+    try:
+        # Appel à l'API du Portail Orange pour valider le token OTP
+        response = requests.post(
+            OTP_RESOLVE_ENDPOINT,
+            json={
+                "otp_token": otp_token,
+                "source": source
+            },
+            headers={
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            timeout=10
+        )
+        
+        # Journaliser la réponse (code HTTP uniquement)
+        app.logger.info(f"Réponse du Portail Orange: HTTP {response.status_code}")
+        
+        if response.status_code != 200:
+            app.logger.error(f"Erreur HTTP {response.status_code} lors de la validation OTP: {response.text}")
+            return {
+                "success": False,
+                "message": f"Erreur lors de la communication avec le Portail Orange: {response.status_code}"
+            }
+        
+        # Traiter la réponse JSON
+        try:
+            response_data = response.json()
+            return response_data
+        except ValueError:
+            app.logger.error("Réponse invalide du Portail Orange (JSON invalide)")
+            return {
+                "success": False,
+                "message": "Réponse invalide du serveur d'authentification"
+            }
+            
+    except requests.exceptions.RequestException as e:
+        app.logger.error(f"Erreur de connexion lors de la validation OTP: {str(e)}")
+        return {
+            "success": False,
+            "message": f"Impossible de se connecter au serveur d'authentification: {str(e)}"
+        }
+    except Exception as e:
+        app.logger.error(f"Erreur inattendue lors de la validation OTP: {str(e)}")
+        return {
+            "success": False,
+            "message": f"Une erreur inattendue s'est produite: {str(e)}"
+        }
 
 @app.route('/validate-otp', methods=['POST'])
 def validate_otp():
@@ -89,74 +178,25 @@ def validate_otp():
             "message": "Token OTP manquant"
         }), 400
     
-    # Tronquer le token pour les logs pour des raisons de sécurité
-    masked_token = f"{otp_token[:8]}...{otp_token[-4:] if len(otp_token) > 12 else ''}" 
-    app.logger.info(f"Validation du token OTP {masked_token} auprès de {OTP_RESOLVE_ENDPOINT}")
+    # Valider le token avec l'API
+    result = validate_token_with_api(otp_token, source)
     
-    try:
-        # Appel à l'API du Portail Orange pour valider le token OTP
-        response = requests.post(
-            OTP_RESOLVE_ENDPOINT,
-            json={
-                "otp_token": otp_token, 
-                "source": source
-            },
-            headers={
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            timeout=10
-        )
+    # Si la validation est réussie, stocker les tokens en session
+    if result.get('success'):
+        # Stocker les informations d'authentification dans la session
+        session['access_token'] = result.get('access_token')
+        session['refresh_token'] = result.get('refresh_token')
+        session['token_type'] = result.get('token_type', 'Bearer')
+        session['token_expiry'] = datetime.now().timestamp() + result.get('expires_in', 3600)
+        session['user_id'] = result.get('user_id')
         
-        # Journaliser la réponse (code HTTP uniquement)
-        app.logger.info(f"Réponse du Portail Orange: HTTP {response.status_code}")
-        
-        if response.status_code != 200:
-            app.logger.error(f"Erreur HTTP {response.status_code} lors de la validation OTP: {response.text}")
-            return jsonify({
-                "success": False,
-                "message": f"Erreur lors de la communication avec le Portail Orange: {response.status_code}"
-            }), 500
-            
-        # Traiter la réponse JSON
-        try:
-            response_data = response.json()
-        except ValueError:
-            app.logger.error("Réponse invalide du Portail Orange (JSON invalide)")
-            return jsonify({
-                "success": False,
-                "message": "Réponse invalide du serveur d'authentification"
-            }), 500
-        
-        # Si la validation est réussie, stocker les tokens en session
-        if response_data.get('success'):
-            # Stocker les informations d'authentification dans la session
-            session['access_token'] = response_data.get('access_token')
-            session['refresh_token'] = response_data.get('refresh_token')
-            session['token_type'] = response_data.get('token_type', 'Bearer')
-            session['token_expiry'] = datetime.now().timestamp() + response_data.get('expires_in', 3600)
-            session['user_id'] = response_data.get('user_id')
-            
-            app.logger.info(f"Authentification réussie pour l'utilisateur {response_data.get('user_id')}")
-        else:
-            app.logger.warning(f"Validation OTP échouée: {response_data.get('message')}")
-        
-        return jsonify(response_data)
+        app.logger.info(f"Authentification réussie pour l'utilisateur {result.get('user_id')}")
+    else:
+        app.logger.warning(f"Validation OTP échouée: {result.get('message')}")
     
-    except requests.exceptions.RequestException as e:
-        # Erreur de connexion ou timeout
-        app.logger.error(f"Erreur de connexion lors de la validation OTP: {str(e)}")
-        return jsonify({
-            "success": False,
-            "message": "Impossible de se connecter au serveur d'authentification. Veuillez réessayer."
-        }), 503
-    except Exception as e:
-        # Autres erreurs
-        app.logger.error(f"Erreur inattendue lors de la validation OTP: {str(e)}")
-        return jsonify({
-            "success": False,
-            "message": "Une erreur inattendue s'est produite. Veuillez réessayer ultérieurement."
-        }), 500
+    # On retourne le résultat brut de l'API pour que le frontend puisse l'afficher
+    http_status = 200 if result.get('success') else 400
+    return jsonify(result), http_status
 
 @app.route('/dashboard')
 @login_required

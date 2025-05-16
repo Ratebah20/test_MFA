@@ -24,6 +24,7 @@
                     <h4>Détails de la requête</h4>
                     <div class="code-block">
                         <p><strong>Token OTP reçu :</strong> <code id="token-display">{{ otp_token[:8] }}...</code></p>
+                        <p><strong>Source :</strong> <code>{{ source | default("selfcare") }}</code></p>
                         <p><strong>Endpoint API :</strong> <code>/resolve-otp</code></p>
                         <p><strong>Méthode :</strong> <code>POST</code></p>
                     </div>
@@ -70,6 +71,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const otpToken = '{{ otp_token }}';
+        const source = '{{ source | default("selfcare") }}';
         const statusMessage = document.getElementById('status-message');
         const validationResult = document.getElementById('validation-result');
         const resultTitle = document.getElementById('result-title');
@@ -103,7 +105,7 @@
             },
             body: JSON.stringify({ 
                 otp_token: otpToken,
-                source: 'selfcare'
+                source: source
             }),
             credentials: 'include'
         })
