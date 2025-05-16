@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Accueil - Orange Selfcare Simulation{% endblock %}
+
+{% block content %}
+<div class="container home-container">
+    <h1>Bienvenue sur la simulation Selfcare</h1>
+    
+    <div class="info-panel">
+        <h2>Démonstration de l'intégration OTP</h2>
+        <p>Cette application simule l'intégration de Selfcare avec le système MFA d'Orange Luxembourg via la méthode OTP.</p>
+        
+        <div class="feature-box">
+            <h3>Fonctionnalités disponibles :</h3>
+            <ul>
+                <li>Réception et validation des tokens OTP</li>
+                <li>Simulation du dashboard après authentification</li>
+                <li>Cas particulier : Première connexion avec changement de mot de passe</li>
+                <li>Simulation des scénarios d'erreur (token invalide, expiré, etc.)</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="action-panel">
+        <h2>Pour commencer</h2>
+        <p>Pour tester l'intégration, vous avez deux options :</p>
+        
+        <div class="action-buttons">
+            <a href="{{ url_for('simulate_redirect') }}" class="btn primary-btn">
+                Simuler une redirection avec OTP
+            </a>
+            
+            <a href="{{ url_for('simulate_first_login') }}" class="btn secondary-btn">
+                Simuler une première connexion
+            </a>
+        </div>
+        
+        <div class="info-note">
+            <p><strong>Note :</strong> En environnement réel, la redirection viendrait du Portail Orange après une authentification MFA réussie.</p>
+        </div>
+    </div>
+    
+    <div class="doc-panel">
+        <h2>Documentation</h2>
+        <p>Pour plus d'informations sur l'intégration OTP, consultez les documents suivants :</p>
+        <ul>
+            <li>Guide d'intégration OTP</li>
+            <li>Spécifications techniques OTP</li>
+            <li>Guide d'intégration Selfcare</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

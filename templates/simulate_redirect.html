@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Simulation de redirection - Orange Selfcare Simulation{% endblock %}
+
+{% block content %}
+<div class="container redirect-container">
+    <div class="card">
+        <div class="card-header">
+            <h1>Simulation de redirection avec OTP</h1>
+        </div>
+        <div class="card-body">
+            <div class="info-message">
+                <p><strong>Note :</strong> Cette page simule le processus de redirection depuis le Portail Orange vers Selfcare.</p>
+                <p>En contexte réel, cette redirection se produirait automatiquement après une authentification MFA réussie sur le Portail Orange.</p>
+            </div>
+            
+            <div class="redirect-info">
+                <h2>Détails de la redirection</h2>
+                <div class="info-row">
+                    <label>URL de redirection :</label>
+                    <code class="url-display">{{ redirect_url }}</code>
+                </div>
+                
+                {% if otp_token %}
+                <div class="info-row">
+                    <label>Token OTP :</label>
+                    <code class="token-display">{{ otp_token }}</code>
+                </div>
+                {% endif %}
+                
+                <div class="redirect-countdown" id="countdown-container">
+                    <p>Redirection automatique dans <span id="countdown">5</span> secondes...</p>
+                    <div class="progress-bar">
+                        <div class="progress" id="countdown-progress"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="redirect-options">
+                <h2>Options de simulation</h2>
+                <div class="option-buttons">
+                    <a href="{{ redirect_url }}" class="btn primary-btn" id="redirect-now-btn">
+                        Rediriger maintenant
+                    </a>
+                    
+                    <a href="{{ url_for('simulate_redirect', type='valid') }}" class="btn secondary-btn">
+                        Générer un nouveau token valide
+                    </a>
+                    
+                    <a href="{{ url_for('simulate_redirect', type='invalid') }}" class="btn secondary-btn">
+                        Générer un token invalide
+                    </a>
+                    
+                    <a href="{{ url_for('simulate_redirect', type='expired') }}" class="btn secondary-btn">
+                        Générer un token expiré
+                    </a>
+                </div>
+            </div>
+            
+            <div class="technical-details">
+                <h2>Détails techniques</h2>
+                <p>Le processus de redirection avec OTP comprend les étapes suivantes :</p>
+                <ol>
+                    <li>Authentification réussie sur le Portail Orange</li>
+                    <li>Génération d'un token OTP sécurisé</li>
+                    <li>Stockage du token OTP et des informations d'authentification</li>
+                    <li>Redirection vers l'application Selfcare avec le token OTP</li>
+                    <li>Extraction et validation du token OTP par Selfcare</li>
+                    <li>Récupération des informations d'authentification</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let countdown = 5;
+        const countdownElement = document.getElementById('countdown');
+        const progressElement = document.getElementById('countdown-progress');
+        const redirectUrl = '{{ redirect_url }}';
+        
+        // Fonction de mise à jour du compte à rebours
+        const updateCountdown = () => {
+            countdown -= 1;
+            countdownElement.textContent = countdown;
+            
+            // Mise à jour de la barre de progression
+            const progressWidth = ((5 - countdown) / 5) * 100;
+            progressElement.style.width = `${progressWidth}%`;
+            
+            if (countdown <= 0) {
+                clearInterval(interval);
+                window.location.href = redirectUrl;
+            }
+        };
+        
+        // Démarrer le compte à rebours
+        const interval = setInterval(updateCountdown, 1000);
+        
+        // Permettre à l'utilisateur d'annuler la redirection automatique
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                clearInterval(interval);
+                document.getElementById('countdown-container').innerHTML = '<p>Redirection automatique annulée. Cliquez sur "Rediriger maintenant" pour continuer.</p>';
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Traitement de l'authentification - Orange Selfcare Simulation{% endblock %}
+
+{% block extra_head %}
+<meta http-equiv="refresh" content="10;url={{ url_for('dashboard') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container processing-container">
+    <div class="card">
+        <div class="card-header">
+            <h1>Validation du token OTP</h1>
+        </div>
+        <div class="card-body">
+            <div class="loading-spinner"></div>
+            <p id="status-message">Validation du token OTP en cours...</p>
+            <div id="token-info">
+                <p><strong>Token reçu :</strong> <code id="token-display">{{ otp_token[:10] }}...</code></p>
+            </div>
+            <div id="error-message" class="error-message" style="display: none;"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const otpToken = '{{ otp_token }}';
+        const statusMessage = document.getElementById('status-message');
+        const errorMessage = document.getElementById('error-message');
+        
+        // Valider le token OTP
+        fetch('{{ url_for("validate_otp") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ otp_token: otpToken })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                statusMessage.textContent = 'Token OTP validé avec succès! Redirection vers le dashboard...';
+                // Redirection vers le dashboard après 2 secondes
+                setTimeout(() => {
+                    window.location.href = '{{ url_for("dashboard") }}';
+                }, 2000);
+            } else {
+                statusMessage.textContent = 'Échec de la validation du token OTP.';
+                errorMessage.textContent = data.message || 'Une erreur inconnue est survenue.';
+                errorMessage.style.display = 'block';
+                
+                // Désactiver la redirection automatique
+                const meta = document.querySelector('meta[http-equiv="refresh"]');
+                if (meta) {
+                    meta.remove();
+                }
+                
+                // Ajouter un bouton de retour
+                const cardBody = document.querySelector('.card-body');
+                const backButton = document.createElement('a');
+                backButton.href = '{{ url_for("index") }}';
+                backButton.className = 'btn primary-btn';
+                backButton.textContent = 'Retour à l\'accueil';
+                backButton.style.marginTop = '20px';
+                cardBody.appendChild(backButton);
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            statusMessage.textContent = 'Erreur lors de la communication avec le serveur.';
+            errorMessage.textContent = 'Une erreur technique est survenue. Veuillez réessayer ultérieurement.';
+            errorMessage.style.display = 'block';
+            
+            // Désactiver la redirection automatique
+            const meta = document.querySelector('meta[http-equiv="refresh"]');
+            if (meta) {
+                meta.remove();
+            }
+        });
+    });
+</script>
+{% endblock %}

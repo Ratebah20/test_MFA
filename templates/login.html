@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}Connexion - Orange Selfcare Simulation{% endblock %}
+
+{% block content %}
+<div class="container login-container">
+    <div class="card login-card">
+        <div class="card-header">
+            <h1>Connexion à Selfcare</h1>
+        </div>
+        <div class="card-body">
+            <div class="info-message">
+                <p><strong>Note :</strong> Cette page simule la connexion directe à Selfcare.</p>
+                <p>En contexte réel, les utilisateurs seraient généralement redirigés depuis le Portail Orange après authentification MFA.</p>
+            </div>
+            
+            <div class="login-options">
+                <h2>Options de connexion</h2>
+                <p>Pour tester l'intégration OTP, utilisez l'une des options suivantes :</p>
+                
+                <div class="option-buttons">
+                    <a href="{{ url_for('simulate_redirect') }}" class="btn primary-btn">
+                        Simuler une redirection avec OTP valide
+                    </a>
+                    
+                    <a href="{{ url_for('simulate_redirect', type='invalid') }}" class="btn secondary-btn">
+                        Simuler une redirection avec OTP invalide
+                    </a>
+                    
+                    <a href="{{ url_for('simulate_redirect', type='expired') }}" class="btn secondary-btn">
+                        Simuler une redirection avec OTP expiré
+                    </a>
+                    
+                    <a href="{{ url_for('simulate_first_login') }}" class="btn primary-btn">
+                        Simuler une première connexion (changement de mot de passe)
+                    </a>
+                </div>
+            </div>
+            
+            <div class="manual-login-form">
+                <h2>Connexion manuelle (simulation)</h2>
+                <p><small>Cette méthode n'utilise pas le système OTP et est fournie uniquement à des fins de démonstration.</small></p>
+                
+                <form action="{{ url_for('validate_otp') }}" method="post" id="manual-login-form">
+                    <div class="form-group">
+                        <label for="username">Nom d'utilisateur</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Mot de passe</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn primary-btn">Se connecter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Intercepter le formulaire de connexion manuel
+        document.getElementById('manual-login-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            // Simuler une connexion réussie
+            alert('Cette fonctionnalité simulerait une connexion directe à Selfcare sans passer par le système OTP.');
+            
+            // Stocker des informations de session simulées
+            fetch('/validate-otp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    otp_token: 'direct_login_' + Math.random().toString(36).substring(2, 15)
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '{{ url_for("dashboard") }}';
+                } else {
+                    alert('Erreur de connexion: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('Une erreur technique est survenue. Veuillez réessayer ultérieurement.');
+            });
+        });
+    });
+</script>
+{% endblock %}

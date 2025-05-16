@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Erreur - Orange Selfcare Simulation{% endblock %}
+
+{% block content %}
+<div class="container error-container">
+    <div class="card error-card">
+        <div class="card-header">
+            <h1>Une erreur s'est produite</h1>
+        </div>
+        <div class="card-body">
+            <div class="error-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+            </div>
+            
+            <div class="error-details">
+                {% if message == 'missing_token' %}
+                    <h2>Token OTP manquant</h2>
+                    <p>Aucun token OTP n'a été trouvé dans l'URL de redirection.</p>
+                    <p>Vérifiez que le Portail Orange inclut bien le paramètre <code>otp_token</code> dans l'URL de redirection.</p>
+                {% elif message == 'invalid_token' %}
+                    <h2>Token OTP invalide</h2>
+                    <p>Le token OTP fourni n'est pas valide ou n'a pas pu être vérifié.</p>
+                    <p>Assurez-vous que le token n'a pas déjà été utilisé et qu'il n'a pas été altéré.</p>
+                {% elif message == 'expired_token' %}
+                    <h2>Token OTP expiré</h2>
+                    <p>Le token OTP a expiré (durée de validité : 5 minutes).</p>
+                    <p>Veuillez retourner au Portail Orange pour obtenir un nouveau token.</p>
+                {% elif message == 'missing_params' %}
+                    <h2>Paramètres manquants</h2>
+                    <p>Des paramètres obligatoires sont manquants pour traiter votre demande.</p>
+                    <p>Veuillez recommencer le processus depuis le début.</p>
+                {% else %}
+                    <h2>Erreur inattendue</h2>
+                    <p>Une erreur inattendue s'est produite lors du traitement de votre demande.</p>
+                    <p>Veuillez réessayer ultérieurement ou contacter le support.</p>
+                {% endif %}
+            </div>
+            
+            <div class="error-actions">
+                <a href="{{ url_for('index') }}" class="btn primary-btn">Retour à l'accueil</a>
+                <a href="{{ url_for('simulate_redirect') }}" class="btn secondary-btn">Simuler une nouvelle redirection</a>
+            </div>
+            
+            <div class="error-help">
+                <h3>Besoin d'aide ?</h3>
+                <p>Si cette erreur persiste, consultez la documentation d'intégration OTP ou contactez l'équipe Orange.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
