@@ -1,97 +1,141 @@
+127.0.0.1 - - [16/May/2025:15:13:54 +0000] "GET /static/css/style.css HTTP/1.1" 200 0 "https://test-mfa-kq6e.onrender.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+127.0.0.1 - - [16/May/2025:15:13:54 +0000] "GET /static/img/orange-logo.svg HTTP/1.1" 200 0 "https://test-mfa-kq6e.onrender.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+127.0.0.1 - - [16/May/2025:15:13:54 +0000] "GET /static/js/main.js HTTP/1.1" 200 0 "https://test-mfa-kq6e.onrender.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+127.0.0.1 - - [16/May/2025:15:13:54 +0000] "GET /static/img/favicon.ico HTTP/1.1" 200 0 "https://test-mfa-kq6e.onrender.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+[2025-05-16 15:14:30,787] INFO in app: Détection d'un token OTP dans la route racine, redirection vers auth-callback
+--- Logging error ---
 Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/logging/__init__.py", line 449, in format
+    return self._format(record)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/logging/__init__.py", line 445, in _format
+    return self._fmt % values
+           ~~~~~~~~~~^~~~~~~~
+KeyError: 'remote_addr'
+During handling of the above exception, another exception occurred:
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/logging/__init__.py", line 1110, in emit
+    msg = self.format(record)
+          ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/logging/__init__.py", line 953, in format
+    return fmt.format(record)
+           ^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/logging/__init__.py", line 690, in format
+    s = self.formatMessage(record)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/logging/__init__.py", line 659, in formatMessage
+    return self._style.format(record)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/logging/__init__.py", line 451, in format
+    raise ValueError('Formatting field not found in record: %s' % e)
+ValueError: Formatting field not found in record: 'remote_addr'
+Call stack:
   File "/opt/render/project/src/.venv/bin/gunicorn", line 8, in <module>
     sys.exit(run())
-             ^^^^^
   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/app/wsgiapp.py", line 67, in run
     WSGIApplication("%(prog)s [OPTIONS] [APP_MODULE]").run()
   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/app/base.py", line 236, in run
     super().run()
   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/app/base.py", line 72, in run
     Arbiter(self).run()
-    ^^^^^^^^^^^^^
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 58, in __init__
-    self.setup(app)
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 118, in setup
-    self.app.wsgi()
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/app/base.py", line 67, in wsgi
-    self.callable = self.load()
-                    ^^^^^^^^^^^
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/app/wsgiapp.py", line 58, in load
-    return self.load_wsgiapp()
-           ^^^^^^^^^^^^^^^^^^^
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/app/wsgiapp.py", line 48, in load_wsgiapp
-    return util.import_app(self.app_uri)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/util.py", line 371, in import_app
-    mod = importlib.import_module(module)
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/local/lib/python3.11/importlib/__init__.py", line 126, in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
-  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
-  File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
-  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
-  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
-  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
-  File "/opt/render/project/src/app.py", line 281, in <module>
-    @app.route('/error')
-     ^^^^^^^^^^^^^^^^^^^
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/flask/scaffold.py", line 435, in decorator
-    self.add_url_rule(rule, endpoint, f, **options)
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/flask/scaffold.py", line 50, in wrapper_func
-    return f(self, *args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/flask/app.py", line 1059, in add_url_rule
-    raise AssertionError(
-AssertionError: View function mapping is overwriting an existing endpoint function: error
-==> Exited with status 1
-==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys
-==> Running 'gunicorn app:app'
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 202, in run
+    self.manage_workers()
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 571, in manage_workers
+    self.spawn_workers()
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 642, in spawn_workers
+    self.spawn_worker()
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 609, in spawn_worker
+    worker.init_process()
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/workers/base.py", line 142, in init_process
+    self.run()
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 126, in run
+    self.run_for_one(timeout)
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 70, in run_for_one
+    self.accept(listener)
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 32, in accept
+    self.handle(listener, client, addr)
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 135, in handle
+    self.handle_request(listener, req, client, addr)
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 178, in handle_request
+    respiter = self.wsgi(environ, resp.start_response)
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/flask/app.py", line 2213, in __call__
+    return self.wsgi_app(environ, start_response)
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/flask/app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/flask/app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/flask/app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+  File "/opt/render/project/src/app.py", line 68, in index
+    app.logger.info(f"Détection d'un token OTP dans la route racine, redirection vers auth-callback")
+Message: "Détection d'un token OTP dans la route racine, redirection vers auth-callback"
+Arguments: ()
+127.0.0.1 - - [16/May/2025:15:14:30 +0000] "GET /?otp_token=RcUjePvr9RkLsU1LbJUZ93ezGZawG3pK HTTP/1.1" 302 301 "https://acc.portail.orange.lu/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+[2025-05-16 15:14:30,852] INFO in app: Redirection reçue avec token OTP: RcUjePvr...G3pK (source: selfcare)
+--- Logging error ---
 Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/logging/__init__.py", line 449, in format
+    return self._format(record)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/logging/__init__.py", line 445, in _format
+    return self._fmt % values
+           ~~~~~~~~~~^~~~~~~~
+KeyError: 'remote_addr'
+During handling of the above exception, another exception occurred:
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/logging/__init__.py", line 1110, in emit
+    msg = self.format(record)
+          ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/logging/__init__.py", line 953, in format
+    return fmt.format(record)
+           ^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/logging/__init__.py", line 690, in format
+    s = self.formatMessage(record)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/logging/__init__.py", line 659, in formatMessage
+    return self._style.format(record)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/logging/__init__.py", line 451, in format
+    raise ValueError('Formatting field not found in record: %s' % e)
+ValueError: Formatting field not found in record: 'remote_addr'
+Call stack:
   File "/opt/render/project/src/.venv/bin/gunicorn", line 8, in <module>
     sys.exit(run())
-             ^^^^^
   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/app/wsgiapp.py", line 67, in run
     WSGIApplication("%(prog)s [OPTIONS] [APP_MODULE]").run()
   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/app/base.py", line 236, in run
     super().run()
   File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/app/base.py", line 72, in run
     Arbiter(self).run()
-    ^^^^^^^^^^^^^
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 58, in __init__
-    self.setup(app)
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 118, in setup
-    self.app.wsgi()
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/app/base.py", line 67, in wsgi
-    self.callable = self.load()
-                    ^^^^^^^^^^^
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/app/wsgiapp.py", line 58, in load
-    return self.load_wsgiapp()
-           ^^^^^^^^^^^^^^^^^^^
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/app/wsgiapp.py", line 48, in load_wsgiapp
-    return util.import_app(self.app_uri)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/util.py", line 371, in import_app
-    mod = importlib.import_module(module)
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/local/lib/python3.11/importlib/__init__.py", line 126, in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
-  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
-  File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
-  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
-  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
-  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
-  File "/opt/render/project/src/app.py", line 281, in <module>
-    @app.route('/error')
-     ^^^^^^^^^^^^^^^^^^^
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/flask/scaffold.py", line 435, in decorator
-    self.add_url_rule(rule, endpoint, f, **options)
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/flask/scaffold.py", line 50, in wrapper_func
-    return f(self, *args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/flask/app.py", line 1059, in add_url_rule
-    raise AssertionError(
-AssertionError: View function mapping is overwriting an existing endpoint function: error
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 202, in run
+    self.manage_workers()
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 571, in manage_workers
+    self.spawn_workers()
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 642, in spawn_workers
+    self.spawn_worker()
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 609, in spawn_worker
+    worker.init_process()
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/workers/base.py", line 142, in init_process
+    self.run()
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 126, in run
+    self.run_for_one(timeout)
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 70, in run_for_one
+    self.accept(listener)
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 32, in accept
+    self.handle(listener, client, addr)
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 135, in handle
+    self.handle_request(listener, req, client, addr)
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 178, in handle_request
+    respiter = self.wsgi(environ, resp.start_response)
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/flask/app.py", line 2213, in __call__
+    return self.wsgi_app(environ, start_response)
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/flask/app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/flask/app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/flask/app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+  File "/opt/render/project/src/app.py", line 98, in auth_callback
+    app.logger.info(f"Redirection reçue avec token OTP: {masked_token} (source: {source})")
+Message: 'Redirection reçue avec token OTP: RcUjePvr...G3pK (source: selfcare)'
+Arguments: ()

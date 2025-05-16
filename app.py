@@ -15,8 +15,8 @@ if not app.debug:
     # Configurer le logger pour écrire dans un fichier
     file_handler = logging.FileHandler('error.log')
     file_handler.setLevel(logging.INFO)
-    # Format avec horodatage et informations de requête
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s [%(remote_addr)s]')
+    # Format avec horodatage simpli
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     file_handler.setFormatter(formatter)
     app.logger.addHandler(file_handler)
     app.logger.setLevel(logging.INFO)
@@ -97,13 +97,14 @@ def auth_callback():
     masked_token = f"{otp_token[:8]}...{otp_token[-4:] if len(otp_token) > 12 else ''}"
     app.logger.info(f"Redirection reçue avec token OTP: {masked_token} (source: {source})")
     
-    # Option: Validation automatique du token sans afficher la page de processing
-    # Décommentez ce bloc pour une validation immédiate sans page intermédiaire
-    """
+    # Activer la validation automatique côté serveur pour éviter les problèmes avec AJAX
     try:
         # Valider directement le token avec l'API du Portail Orange
+        app.logger.info(f"Tentative de validation automatique du token côté serveur")
         result = validate_token_with_api(otp_token, source)
-        if result['success']:
+        app.logger.info(f"Résultat de validation: {result.get('success')}, message: {result.get('message', 'Aucun message')}")
+        
+        if result.get('success'):
             # Stocker les informations d'authentification dans la session
             session['access_token'] = result.get('access_token')
             session['refresh_token'] = result.get('refresh_token', '')
@@ -112,24 +113,44 @@ def auth_callback():
             session['user_id'] = result.get('user_id')
             
             app.logger.info(f"Authentification réussie pour l'utilisateur {result.get('user_id')}")
-            return redirect(url_for('dashboard'))
+            
+            # Passer le token à la page de traitement avec le résultat de validation
+            return render_template('processing.html', 
+                                otp_token=otp_token, 
+                                source=source,
+                                validation_result=result,  # Passer le résultat à la page
+                                auto_validated=True,       # Indiquer que validation déjà faite
+                                redirect_to_dashboard=True, # Rediriger après affichage
+                                user_id=result.get('user_id'),
+                                expires_in=result.get('expires_in', 3600),
+                                mfa_login_url=MFA_LOGIN_URL,
+                                PORTAIL_API_URL=PORTAIL_API_URL,
+                                now=dt.datetime.now())
         else:
-            # En cas d'échec, rediriger vers la page d'erreur
-            flash(result.get('message', 'Échec de validation du token OTP.'), 'error')
-            return redirect(url_for('error_page', message='invalid_token'))
+            # En cas d'échec, montrer la page de traitement avec l'erreur
+            app.logger.warning(f"Validation OTP échouée: {result.get('message')}")
+            return render_template('processing.html', 
+                                otp_token=otp_token, 
+                                source=source,
+                                validation_result=result,  # Passer le résultat à la page
+                                auto_validated=True,      # Indiquer que validation déjà faite
+                                error_message=result.get('message', 'Échec de validation du token OTP.'),
+                                mfa_login_url=MFA_LOGIN_URL,
+                                PORTAIL_API_URL=PORTAIL_API_URL,
+                                now=dt.datetime.now())
     except Exception as e:
         app.logger.error(f"Erreur lors de la validation automatique du token OTP: {str(e)}")
-        flash('Une erreur est survenue lors de la validation du token.', 'error')
-        return redirect(url_for('error_page', message='validation_error'))
-    """
-    
-    # Passer le token à la page de traitement pour validation interactive
-    return render_template('processing.html', 
-                          otp_token=otp_token, 
-                          source=source,
-                          mfa_login_url=MFA_LOGIN_URL,
-                          PORTAIL_API_URL=PORTAIL_API_URL,
-                          now=dt.datetime.now())
+        import traceback
+        app.logger.error(f"Traceback: {traceback.format_exc()}")
+        
+        # En cas d'erreur durant la validation, afficher la page de traitement standard
+        # pour permettre la validation côté client
+        return render_template('processing.html', 
+                              otp_token=otp_token, 
+                              source=source,
+                              mfa_login_url=MFA_LOGIN_URL,
+                              PORTAIL_API_URL=PORTAIL_API_URL,
+                              now=dt.datetime.now())
 
 def validate_token_with_api(otp_token, source='selfcare'):
     """

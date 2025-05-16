@@ -222,84 +222,150 @@
             return button;
         }
         
-        // Définir l'URL de l'endpoint de validation clairement
-        const validateUrl = '{{ url_for("validate_otp") }}';
+        // Vérifier si la validation a déjà été effectuée côté serveur
+        const autoValidated = {{ auto_validated|default('false') }};
         
-        // Préparer les données pour débogage
-        const postData = { 
-            otp_token: otpToken,
-            source: source
-        };
-        
-        // Afficher des logs détaillés
-        console.log('Début de la validation OTP');
-        console.log('URL de validation:', validateUrl);
-        console.log('Données à envoyer:', postData);
-        
-        // Définir explicitement les en-têtes
-        const headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        };
-        console.log('En-têtes utilisées:', headers);
-        
-        // Convertir explicitement le corps en JSON
-        const jsonBody = JSON.stringify(postData);
-        console.log('Corps de la requête (JSON):', jsonBody);
-        
-        // Afficher un message dans l'interface utilisateur
-        statusMessage.textContent = 'Envoi de la requête au serveur...';
-        
-        // Essai avec fetch API
-        console.log('Envoi de la requête de validation OTP via fetch');
-        fetch(validateUrl, {
-            method: 'POST',
-            headers: headers,
-            body: jsonBody,
-            credentials: 'include'
-        })
-        .then(response => {
-            console.log('Réponse reçue, statut HTTP:', response.status);
-            console.log('En-têtes de réponse:', [...response.headers.entries()].reduce((obj, [key, val]) => { obj[key] = val; return obj; }, {}));
-            return response.json();
-        })
-        .catch(fetchError => {
-            console.error('Erreur fetch initiale:', fetchError);
-            // En cas d'erreur fetch, essayer une requête XMLHttpRequest comme fallback
-            return new Promise((resolve, reject) => {
-                console.log('Tentative de fallback avec XMLHttpRequest');
-                statusMessage.textContent = 'Nouvelle tentative avec une méthode alternative...';
+        if (autoValidated) {
+            console.log('Validation déjà effectuée côté serveur, affichage des résultats');
+            
+            {% if validation_result and validation_result.success %}
+                // Mise à jour pour succès
+                progressBar.style.width = '100%';
+                stepValidation.classList.remove('step-current');
+                stepValidation.classList.add('step-completed');
+                stepValidation.querySelector('.step-icon').innerHTML = '<div class="step-check">✓</div>';
+                stepValidation.querySelector('.step-content p').textContent = 'Le token OTP a été validé avec succès par le serveur d\'authentification.';
                 
-                const xhr = new XMLHttpRequest();
-                xhr.open('POST', validateUrl, true);
+                // Afficher les détails de la réponse
+                validationResult.style.display = 'block';
+                actionButtons.style.display = 'block';
                 
-                // Ajouter les en-têtes
-                Object.keys(headers).forEach(key => {
-                    xhr.setRequestHeader(key, headers[key]);
-                });
+                // Affichage des informations de token en cas de succès
+                resultTitle.textContent = 'Validation réussie';
+                resultTitle.className = 'success-title';
+                resultMessage.textContent = 'Le token OTP a été validé avec succès. Vous avez maintenant accès à votre compte Selfcare.';
                 
-                xhr.onload = function() {
-                    if (xhr.status >= 200 && xhr.status < 300) {
-                        console.log('Réponse XHR reçue:', xhr.responseText);
-                        try {
-                            const data = JSON.parse(xhr.responseText);
-                            resolve(data);
-                        } catch (e) {
-                            reject(new Error('Erreur de parsing JSON: ' + e.message));
+                // Afficher les informations du token reçu
+                tokenInfo.style.display = 'block';
+                document.getElementById('user-id').textContent = '{{ user_id }}' || 'Non disponible';
+                document.getElementById('access-token').textContent = 'Sécurisé';
+                document.getElementById('token-type').textContent = 'Bearer';
+                document.getElementById('expires-in').textContent = '{{ expires_in }}' ? '{{ expires_in }}' + ' secondes' : 'Non disponible';
+                
+                // Ajouter le bouton de redirection vers le dashboard
+                addButton('Accéder au dashboard', '{{ url_for("dashboard") }}', 'primary-btn');
+                
+                // Redirection automatique après 3 secondes
+                {% if redirect_to_dashboard %}
+                setTimeout(() => {
+                    console.log('Redirection vers le dashboard...');
+                    window.location.href = '{{ url_for("dashboard") }}';
+                }, 3000);
+                {% endif %}
+            {% else %}
+                // Mise à jour pour échec
+                progressBar.style.width = '100%';
+                stepValidation.classList.remove('step-current');
+                stepValidation.classList.add('step-error');
+                stepValidation.querySelector('.step-icon').innerHTML = '<div class="step-error-icon">✗</div>';
+                stepValidation.querySelector('.step-content p').textContent = 'La validation du token OTP a échoué: {{ error_message|default("Erreur inconnue") }}';
+                
+                // Afficher les détails de la réponse
+                validationResult.style.display = 'block';
+                actionButtons.style.display = 'block';
+                
+                // Affichage des erreurs
+                resultTitle.textContent = 'Validation échouée';
+                resultTitle.className = 'error-title';
+                resultMessage.textContent = 'Le token OTP n\'a pas pu être validé.';
+                
+                errorContainer.style.display = 'block';
+                errorMessage.textContent = '{{ error_message|default("Une erreur inconnue est survenue lors de la validation.") }}';
+                
+                // Ajouter des boutons d'action
+                addButton('Retour à l\'accueil', '{{ url_for("index") }}', 'primary-btn');
+                addButton('Réessayer avec le Portail Orange', '{{ mfa_login_url }}', 'secondary-btn');
+            {% endif %}
+        } else {
+            // Validation côté client normale
+            // Définir l'URL de l'endpoint de validation clairement
+            const validateUrl = '{{ url_for("validate_otp") }}';
+            
+            // Préparer les données pour débogage
+            const postData = { 
+                otp_token: otpToken,
+                source: source
+            };
+            
+            // Afficher des logs détaillés
+            console.log('Début de la validation OTP');
+            console.log('URL de validation:', validateUrl);
+            console.log('Données à envoyer:', postData);
+            
+            // Définir explicitement les en-têtes
+            const headers = {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            };
+            console.log('En-têtes utilisées:', headers);
+            
+            // Convertir explicitement le corps en JSON
+            const jsonBody = JSON.stringify(postData);
+            console.log('Corps de la requête (JSON):', jsonBody);
+            
+            // Afficher un message dans l'interface utilisateur
+            statusMessage.textContent = 'Envoi de la requête au serveur...';
+            
+            // Essai avec fetch API
+            console.log('Envoi de la requête de validation OTP via fetch');
+            fetch(validateUrl, {
+                method: 'POST',
+                headers: headers,
+                body: jsonBody,
+                credentials: 'include'
+            })
+            .then(response => {
+                console.log('Réponse reçue, statut HTTP:', response.status);
+                console.log('En-têtes de réponse:', [...response.headers.entries()].reduce((obj, [key, val]) => { obj[key] = val; return obj; }, {}));
+                return response.json();
+            })
+            .catch(fetchError => {
+                console.error('Erreur fetch initiale:', fetchError);
+                // En cas d'erreur fetch, essayer une requête XMLHttpRequest comme fallback
+                return new Promise((resolve, reject) => {
+                    console.log('Tentative de fallback avec XMLHttpRequest');
+                    statusMessage.textContent = 'Nouvelle tentative avec une méthode alternative...';
+                    
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', validateUrl, true);
+                    
+                    // Ajouter les en-têtes
+                    Object.keys(headers).forEach(key => {
+                        xhr.setRequestHeader(key, headers[key]);
+                    });
+                    
+                    xhr.onload = function() {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            console.log('Réponse XHR reçue:', xhr.responseText);
+                            try {
+                                const data = JSON.parse(xhr.responseText);
+                                resolve(data);
+                            } catch (e) {
+                                reject(new Error('Erreur de parsing JSON: ' + e.message));
+                            }
+                        } else {
+                            reject(new Error('Statut HTTP: ' + xhr.status));
                         }
-                    } else {
-                        reject(new Error('Statut HTTP: ' + xhr.status));
-                    }
-                };
-                
-                xhr.onerror = function() {
-                    reject(new Error('Erreur réseau avec XMLHttpRequest'));
-                };
-                
-                xhr.send(jsonBody);
-            });
-        })
+                    };
+                    
+                    xhr.onerror = function() {
+                        reject(new Error('Erreur réseau avec XMLHttpRequest'));
+                    };
+                    
+                    xhr.send(jsonBody);
+                });
+            })
         .then(data => {
             console.log('Données de réponse:', data);
             
