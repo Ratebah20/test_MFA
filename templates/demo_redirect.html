@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Démonstration de redirection - Orange Selfcare{% endblock %}
+
+{% block content %}
+<div class="container redirect-container">
+    <div class="card">
+        <div class="card-header">
+            <h1>Démonstration du processus de redirection OTP</h1>
+        </div>
+        <div class="card-body">
+            <div class="warning-box">
+                <h3>Mode démonstration uniquement</h3>
+                <p><strong>Important :</strong> Cette page est uniquement à des fins de démonstration. En environnement réel, la redirection viendrait directement du Portail Orange après une authentification MFA réussie.</p>
+            </div>
+            
+            <div class="info-box">
+                <h3>Processus d'intégration OTP</h3>
+                <ol>
+                    <li>L'utilisateur s'authentifie sur le Portail Orange avec ses identifiants</li>
+                    <li>L'utilisateur valide son identité via une méthode MFA (Google Authenticator, Email, SMS)</li>
+                    <li>Après validation réussie, le Portail Orange génère un token OTP unique</li>
+                    <li>L'utilisateur est redirigé vers l'application externe avec ce token OTP</li>
+                    <li>L'application externe valide ce token auprès du Portail Orange</li>
+                    <li>L'utilisateur accède à l'application externe</li>
+                </ol>
+            </div>
+            
+            <div class="demo-section">
+                <h3>Pour voir ce processus en action</h3>
+                <p>Cliquez sur un des boutons ci-dessous pour simuler une redirection depuis le Portail Orange :</p>
+                
+                <div class="demo-options">
+                    <div class="option-group">
+                        <h4>Option 1: Authentification normale</h4>
+                        <p>Simulation d'une redirection après authentification MFA réussie</p>
+                        <a href="{{ url_for('auth_callback') }}?otp_token=demo_valid_token_{{ range(1000, 9999) | random }}" class="btn primary-btn">
+                            Simuler une redirection avec OTP valide
+                        </a>
+                    </div>
+                    
+                    <div class="option-group">
+                        <h4>Option 2: Cas d'erreur</h4>
+                        <p>Simulation des cas d'erreur possibles</p>
+                        <a href="{{ url_for('auth_callback') }}?otp_token=demo_invalid_token_{{ range(1000, 9999) | random }}" class="btn error-btn">
+                            Simuler un token invalide
+                        </a>
+                        <a href="{{ url_for('auth_callback') }}" class="btn error-btn">
+                            Simuler un token manquant
+                        </a>
+                    </div>
+                    
+                    <div class="option-group">
+                        <h4>Option 3: Première connexion</h4>
+                        <p>Simulation du cas d'un nouvel utilisateur</p>
+                        <a href="{{ url_for('change_password') }}?userId=demo_user_{{ range(1000, 9999) | random }}&token=demo_first_login_{{ range(1000, 9999) | random }}&isOTP=true" class="btn secondary-btn">
+                            Simuler une première connexion
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="integration-note">
+                <h3>Notes pour les développeurs</h3>
+                <p>Dans une intégration réelle, votre application doit :</p>
+                <ul>
+                    <li>Extraire le token OTP du paramètre <code>otp_token</code> de l'URL de redirection</li>
+                    <li>Envoyer une requête à <code>{{ PORTAIL_API_URL|default('/resolve-otp') }}</code> pour valider le token</li>
+                    <li>Traiter la réponse JSON pour récupérer les informations d'authentification</li>
+                    <li>Stocker les tokens d'accès et de rafraîchissement pour les futures requêtes</li>
+                </ul>
+                <p>Consultez notre documentation technique pour plus de détails sur l'implémentation.</p>
+            </div>
+            
+            <div class="return-home">
+                <a href="{{ url_for('index') }}" class="btn secondary-btn">
+                    Retour à l'accueil
+                </a>
+                <a href="{{ mfa_login_url }}" class="btn primary-btn">
+                    Se connecter via le Portail Orange
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

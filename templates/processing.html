@@ -1,24 +1,66 @@
 {% extends 'base.html' %}
 
-{% block title %}Traitement de l'authentification - Orange Selfcare Simulation{% endblock %}
-
-{% block extra_head %}
-<meta http-equiv="refresh" content="10;url={{ url_for('dashboard') }}">
-{% endblock %}
+{% block title %}Traitement de l'authentification - Orange Selfcare{% endblock %}
 
 {% block content %}
 <div class="container processing-container">
     <div class="card">
         <div class="card-header">
-            <h1>Validation du token OTP</h1>
+            <h1>Traitement de l'authentification</h1>
         </div>
         <div class="card-body">
-            <div class="loading-spinner"></div>
-            <p id="status-message">Validation du token OTP en cours...</p>
-            <div id="token-info">
-                <p><strong>Token reçu :</strong> <code id="token-display">{{ otp_token[:10] }}...</code></p>
+            <div class="process-steps">
+                <div class="step step-current">
+                    <div class="step-icon">
+                        <div class="loading-spinner"></div>
+                    </div>
+                    <div class="step-content">
+                        <h3>Validation du token OTP</h3>
+                        <p id="status-message">Validation de l'authentification en cours...</p>
+                    </div>
+                </div>
+                
+                <div class="token-details">
+                    <h4>Détails de la requête</h4>
+                    <div class="code-block">
+                        <p><strong>Token OTP reçu :</strong> <code id="token-display">{{ otp_token[:8] }}...</code></p>
+                        <p><strong>Endpoint API :</strong> <code>/resolve-otp</code></p>
+                        <p><strong>Méthode :</strong> <code>POST</code></p>
+                    </div>
+                </div>
             </div>
-            <div id="error-message" class="error-message" style="display: none;"></div>
+            
+            <div id="validation-result" style="display: none;">
+                <div class="result-box">
+                    <h3 id="result-title">Résultat de la validation</h3>
+                    <p id="result-message"></p>
+                    <div id="token-info" class="token-info" style="display: none;">
+                        <h4>Informations d'authentification reçues</h4>
+                        <div class="code-block">
+                            <p><strong>User ID:</strong> <span id="user-id"></span></p>
+                            <p><strong>Access Token:</strong> <span id="access-token"></span></p>
+                            <p><strong>Token Type:</strong> <span id="token-type"></span></p>
+                            <p><strong>Expiration:</strong> <span id="expires-in"></span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="error-container" class="error-container" style="display: none;">
+                <div class="error-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                </div>
+                <h3>Erreur de validation</h3>
+                <p id="error-message"></p>
+            </div>
+            
+            <div id="action-buttons" class="action-buttons" style="display: none;">
+                <!-- Les boutons seront ajoutés dynamiquement par JavaScript -->
+            </div>
         </div>
     </div>
 </div>
@@ -29,9 +71,30 @@
     document.addEventListener('DOMContentLoaded', function() {
         const otpToken = '{{ otp_token }}';
         const statusMessage = document.getElementById('status-message');
+        const validationResult = document.getElementById('validation-result');
+        const resultTitle = document.getElementById('result-title');
+        const resultMessage = document.getElementById('result-message');
+        const tokenInfo = document.getElementById('token-info');
+        const errorContainer = document.getElementById('error-container');
         const errorMessage = document.getElementById('error-message');
+        const actionButtons = document.getElementById('action-buttons');
         
-        // Valider le token OTP
+        // Mise à jour de l'affichage du token pour raisons de sécurité
+        document.getElementById('token-display').textContent = otpToken.substring(0, 8) + '...' + otpToken.substring(otpToken.length - 4);
+        
+        // Fonction pour ajouter un bouton
+        function addButton(text, href, className) {
+            const button = document.createElement('a');
+            button.href = href;
+            button.className = 'btn ' + className;
+            button.textContent = text;
+            actionButtons.appendChild(button);
+            return button;
+        }
+        
+        // Valider le token OTP auprès du Portail Orange
+        console.log('Envoi de la requête de validation OTP');
+        
         fetch('{{ url_for("validate_otp") }}', {
             method: 'POST',
             headers: {
@@ -44,46 +107,67 @@
             }),
             credentials: 'include'
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Réponse reçue, statut HTTP:', response.status);
+            return response.json();
+        })
         .then(data => {
+            console.log('Données de réponse:', data);
+            
+            // Afficher les détails de la réponse
+            validationResult.style.display = 'block';
+            actionButtons.style.display = 'block';
+            
             if (data.success) {
-                statusMessage.textContent = 'Token OTP validé avec succès! Redirection vers le dashboard...';
-                // Redirection vers le dashboard après 2 secondes
+                // Affichage des informations de token en cas de succès
+                resultTitle.textContent = 'Validation réussie';
+                resultTitle.className = 'success-title';
+                resultMessage.textContent = 'Le token OTP a été validé avec succès. Vous avez maintenant accès à votre compte Selfcare.';
+                
+                // Afficher les informations du token reçu
+                tokenInfo.style.display = 'block';
+                document.getElementById('user-id').textContent = data.user_id || 'Non disponible';
+                document.getElementById('access-token').textContent = (data.access_token ? data.access_token.substring(0, 10) + '...' : 'Non disponible');
+                document.getElementById('token-type').textContent = data.token_type || 'Non disponible';
+                document.getElementById('expires-in').textContent = data.expires_in ? data.expires_in + ' secondes' : 'Non disponible';
+                
+                // Ajouter le bouton de redirection vers le dashboard
+                addButton('Accéder au dashboard', '{{ url_for("dashboard") }}', 'primary-btn');
+                
+                // Redirection automatique après 3 secondes
                 setTimeout(() => {
                     window.location.href = '{{ url_for("dashboard") }}';
-                }, 2000);
+                }, 3000);
             } else {
-                statusMessage.textContent = 'Échec de la validation du token OTP.';
-                errorMessage.textContent = data.message || 'Une erreur inconnue est survenue.';
-                errorMessage.style.display = 'block';
+                // Affichage des erreurs
+                resultTitle.textContent = 'Validation échouée';
+                resultTitle.className = 'error-title';
+                resultMessage.textContent = 'Le token OTP n\'a pas pu être validé.';
                 
-                // Désactiver la redirection automatique
-                const meta = document.querySelector('meta[http-equiv="refresh"]');
-                if (meta) {
-                    meta.remove();
-                }
+                errorContainer.style.display = 'block';
+                errorMessage.textContent = data.message || 'Une erreur inconnue est survenue lors de la validation.';
                 
-                // Ajouter un bouton de retour
-                const cardBody = document.querySelector('.card-body');
-                const backButton = document.createElement('a');
-                backButton.href = '{{ url_for("index") }}';
-                backButton.className = 'btn primary-btn';
-                backButton.textContent = 'Retour à l\'accueil';
-                backButton.style.marginTop = '20px';
-                cardBody.appendChild(backButton);
+                // Ajouter des boutons d'action
+                addButton('Retour à l\'accueil', '{{ url_for("index") }}', 'primary-btn');
+                addButton('Réessayer avec le Portail Orange', '{{ mfa_login_url }}', 'secondary-btn');
             }
         })
         .catch(error => {
-            console.error('Erreur:', error);
-            statusMessage.textContent = 'Erreur lors de la communication avec le serveur.';
-            errorMessage.textContent = 'Une erreur technique est survenue. Veuillez réessayer ultérieurement.';
-            errorMessage.style.display = 'block';
+            console.error('Erreur lors de la validation:', error);
             
-            // Désactiver la redirection automatique
-            const meta = document.querySelector('meta[http-equiv="refresh"]');
-            if (meta) {
-                meta.remove();
-            }
+            // Affichage des erreurs techniques
+            validationResult.style.display = 'block';
+            resultTitle.textContent = 'Erreur technique';
+            resultTitle.className = 'error-title';
+            resultMessage.textContent = 'Une erreur technique est survenue lors de la communication avec le serveur.';
+            
+            errorContainer.style.display = 'block';
+            errorMessage.textContent = 'Impossible de contacter le serveur de validation OTP. Veuillez vérifier votre connexion et réessayer.';
+            
+            // Ajouter des boutons d'action
+            actionButtons.style.display = 'block';
+            addButton('Retour à l\'accueil', '{{ url_for("index") }}', 'primary-btn');
+            addButton('Réessayer', location.href, 'secondary-btn');
         });
     });
 </script>

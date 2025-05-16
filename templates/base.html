@@ -23,9 +23,9 @@
                     <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
                     <li><a href="{{ url_for('logout') }}">Déconnexion</a></li>
                     {% else %}
-                    <li><a href="{{ url_for('login') }}">Connexion</a></li>
+                    <li><a href="{{ mfa_login_url }}">Connexion</a></li>
                     {% endif %}
-                    <li><a href="{{ url_for('simulate_redirect') }}">Simuler Redirection</a></li>
+                    <li><a href="{{ url_for('demo_redirect') }}">Démonstration OTP</a></li>
                 </ul>
             </nav>
         </div>

@@ -1,53 +1,63 @@
 {% extends 'base.html' %}
 
-{% block title %}Accueil - Orange Selfcare Simulation{% endblock %}
+{% block title %}Orange Selfcare - Intégration OTP{% endblock %}
 
 {% block content %}
 <div class="container home-container">
-    <h1>Bienvenue sur la simulation Selfcare</h1>
+    <div class="welcome-banner">
+        <h1>Orange Selfcare</h1>
+        <p>Démonstration d'intégration avec le système MFA d'Orange Luxembourg</p>
+    </div>
     
-    <div class="info-panel">
-        <h2>Démonstration de l'intégration OTP</h2>
-        <p>Cette application simule l'intégration de Selfcare avec le système MFA d'Orange Luxembourg via la méthode OTP.</p>
-        
-        <div class="feature-box">
-            <h3>Fonctionnalités disponibles :</h3>
+    <div class="card integration-card">
+        <div class="card-header">
+            <h2>Intégration OTP avec le Portail Orange</h2>
+        </div>
+        <div class="card-body">
+            <p>Cette application démontre comment une application externe (comme Selfcare) s'intègre avec le système MFA d'Orange Luxembourg via la méthode OTP.</p>
+            
+            <div class="info-box">
+                <h3>Fonctionnement de l'intégration OTP</h3>
+                <ol>
+                    <li>L'utilisateur s'authentifie sur le <strong>Portail Orange</strong> (authentification à deux facteurs)</li>
+                    <li>Après une authentification réussie, l'utilisateur est <strong>redirigé vers Selfcare</strong> avec un token OTP</li>
+                    <li>Selfcare <strong>extrait le token OTP</strong> de l'URL de redirection</li>
+                    <li>Selfcare <strong>valide le token</strong> auprès du Portail Orange via une API</li>
+                    <li>Si le token est valide, l'utilisateur <strong>accède au Dashboard</strong> Selfcare</li>
+                </ol>
+            </div>
+            
+            <div class="auth-actions">
+                <h3>Pour commencer l'authentification</h3>
+                <p>Pour vous authentifier, vous devez d'abord vous connecter au Portail Orange :</p>
+                
+                <a href="{{ mfa_login_url }}" class="btn primary-btn">
+                    Se connecter via le Portail Orange
+                </a>
+                
+                <a href="{{ url_for('demo_redirect') }}" class="btn secondary-btn">
+                    Démonstration du processus de redirection
+                </a>
+            </div>
+            
+            <div class="info-note">
+                <p><strong>Note :</strong> En environnement de production, les utilisateurs seraient directement redirigés depuis le Portail Orange après une authentification MFA réussie.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card doc-card">
+        <div class="card-header">
+            <h2>Documentation technique</h2>
+        </div>
+        <div class="card-body">
+            <p>Pour plus d'informations sur l'intégration OTP, consultez nos documents techniques :</p>
             <ul>
-                <li>Réception et validation des tokens OTP</li>
-                <li>Simulation du dashboard après authentification</li>
-                <li>Cas particulier : Première connexion avec changement de mot de passe</li>
-                <li>Simulation des scénarios d'erreur (token invalide, expiré, etc.)</li>
+                <li><strong>Guide d'intégration OTP</strong> - Vue d'ensemble et instructions d'intégration</li>
+                <li><strong>Spécifications techniques</strong> - Détails techniques et API</li>
+                <li><strong>Guide d'intégration Selfcare</strong> - Exemples spécifiques pour Selfcare</li>
             </ul>
         </div>
-    </div>
-    
-    <div class="action-panel">
-        <h2>Pour commencer</h2>
-        <p>Pour tester l'intégration, vous avez deux options :</p>
-        
-        <div class="action-buttons">
-            <a href="{{ url_for('simulate_redirect') }}" class="btn primary-btn">
-                Simuler une redirection avec OTP
-            </a>
-            
-            <a href="{{ url_for('simulate_first_login') }}" class="btn secondary-btn">
-                Simuler une première connexion
-            </a>
-        </div>
-        
-        <div class="info-note">
-            <p><strong>Note :</strong> En environnement réel, la redirection viendrait du Portail Orange après une authentification MFA réussie.</p>
-        </div>
-    </div>
-    
-    <div class="doc-panel">
-        <h2>Documentation</h2>
-        <p>Pour plus d'informations sur l'intégration OTP, consultez les documents suivants :</p>
-        <ul>
-            <li>Guide d'intégration OTP</li>
-            <li>Spécifications techniques OTP</li>
-            <li>Guide d'intégration Selfcare</li>
-        </ul>
     </div>
 </div>
 {% endblock %}

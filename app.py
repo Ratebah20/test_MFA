@@ -1,66 +1,54 @@
 import os
 import json
 import requests
+import logging
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from datetime import datetime, timedelta
 from functools import wraps
-import datetime as dt  # Import additionnel pour la date actuelle
+import datetime as dt
 
 app = Flask(__name__)
-app.secret_key = 'selfcare_simulation_secret_key'  # En production, utilisez une clé secrète sécurisée
+
+# Configuration de l'application
+app.secret_key = os.environ.get('SECRET_KEY', 'selfcare_external_site_key')  # En production, utilisez une clé secrète sécurisée
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=2)
 
-# Configuration
-PORTAIL_API_URL = 'https://acc.portail.orange.lu'
-MOCK_API = os.environ.get('MOCK_API', 'false').lower() == 'true'  # Mode réel par défaut
+# Configuration de l'intégration avec Portail Orange
+PORTAIL_API_URL = os.environ.get('PORTAIL_API_URL', 'https://acc.portail.orange.lu')
+MFA_LOGIN_URL = f"{PORTAIL_API_URL}/login"  # URL de connexion au MFA
+OTP_RESOLVE_ENDPOINT = f"{PORTAIL_API_URL}/resolve-otp"  # Endpoint pour valider les tokens OTP
+
+# Configuration des logs
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    filename='app.log',
+    filemode='a'
+)
 
 # Fonction de décoration pour les routes qui nécessitent une authentification
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'access_token' not in session:
-            flash('Vous devez être connecté pour accéder à cette page.', 'error')
-            return redirect(url_for('login'))
+            flash('Vous devez être connecté via le Portail Orange pour accéder à cette page.', 'error')
+            return redirect(url_for('index'))
         return f(*args, **kwargs)
     return decorated_function
-
-# Simulation des réponses API (pour les tests sans connectivité au portail réel)
-def mock_resolve_otp(otp_token):
-    # Si le token contient "invalid", simuler une erreur
-    if "invalid" in otp_token:
-        return {
-            "success": False,
-            "message": "Token OTP invalide ou expiré"
-        }
-    
-    # Si le token contient "expired", simuler un token expiré
-    if "expired" in otp_token:
-        return {
-            "success": False,
-            "message": "Token OTP expiré"
-        }
-    
-    # Simuler un succès par défaut
-    return {
-        "success": True,
-        "message": "Token OTP validé avec succès",
-        "access_token": f"mock_access_token_{otp_token[:5]}",
-        "refresh_token": f"mock_refresh_token_{otp_token[:5]}",
-        "token_type": "Bearer",
-        "expires_in": 3600,
-        "user_id": "12345"
-    }
 
 # Routes de l'application
 @app.route('/')
 def index():
-    return render_template('index.html', now=dt.datetime.now())
-
-@app.route('/login')
-def login():
-    return render_template('login.html', now=dt.datetime.now())
+    """
+    Page d'accueil avec lien vers le Portail Orange pour débuter l'authentification
+    """
+    app.logger.info("Accès à la page d'accueil")
+    return render_template('index.html', 
+                          mfa_login_url=MFA_LOGIN_URL,
+                          PORTAIL_API_URL=PORTAIL_API_URL,
+                          now=dt.datetime.now())
 
 @app.route('/auth-callback')
 def auth_callback():
@@ -71,75 +59,132 @@ def auth_callback():
     otp_token = request.args.get('otp_token')
     
     if not otp_token:
-        flash('Aucun token OTP trouvé dans l\'URL', 'error')
+        app.logger.warning("Tentative d'accès au callback sans token OTP")
+        flash('Aucun token OTP trouvé dans l\'URL. La redirection depuis le Portail Orange est incorrecte.', 'error')
         return redirect(url_for('error', message='missing_token'))
     
+    app.logger.info(f"Redirection reçue avec token OTP: {otp_token[:8]}...")
+    
     # Passer le token à la page de traitement
-    return render_template('processing.html', otp_token=otp_token, now=dt.datetime.now())
+    return render_template('processing.html', 
+                          otp_token=otp_token, 
+                          mfa_login_url=MFA_LOGIN_URL,
+                          PORTAIL_API_URL=PORTAIL_API_URL,
+                          now=dt.datetime.now())
 
 @app.route('/validate-otp', methods=['POST'])
 def validate_otp():
     """
     API pour valider le token OTP auprès du serveur MFA
+    Cette fonction représente le cœur de l'intégration entre Selfcare et le Portail Orange
     """
-    otp_token = request.json.get('otp_token')
+    data = request.json
+    otp_token = data.get('otp_token')
+    source = data.get('source', 'selfcare')
     
     if not otp_token:
+        app.logger.warning("Tentative de validation sans token OTP")
         return jsonify({
             "success": False,
             "message": "Token OTP manquant"
         }), 400
     
+    # Tronquer le token pour les logs pour des raisons de sécurité
+    masked_token = f"{otp_token[:8]}...{otp_token[-4:] if len(otp_token) > 12 else ''}" 
+    app.logger.info(f"Validation du token OTP {masked_token} auprès de {OTP_RESOLVE_ENDPOINT}")
+    
     try:
-        # Appel réel à l'API du Portail Orange
+        # Appel à l'API du Portail Orange pour valider le token OTP
         response = requests.post(
-            f"{PORTAIL_API_URL}/resolve-otp",
-            json={"otp_token": otp_token, "source": "selfcare"},
+            OTP_RESOLVE_ENDPOINT,
+            json={
+                "otp_token": otp_token, 
+                "source": source
+            },
             headers={
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
             timeout=10
         )
-        response_data = response.json()
+        
+        # Journaliser la réponse (code HTTP uniquement)
+        app.logger.info(f"Réponse du Portail Orange: HTTP {response.status_code}")
+        
+        if response.status_code != 200:
+            app.logger.error(f"Erreur HTTP {response.status_code} lors de la validation OTP: {response.text}")
+            return jsonify({
+                "success": False,
+                "message": f"Erreur lors de la communication avec le Portail Orange: {response.status_code}"
+            }), 500
+            
+        # Traiter la réponse JSON
+        try:
+            response_data = response.json()
+        except ValueError:
+            app.logger.error("Réponse invalide du Portail Orange (JSON invalide)")
+            return jsonify({
+                "success": False,
+                "message": "Réponse invalide du serveur d'authentification"
+            }), 500
         
         # Si la validation est réussie, stocker les tokens en session
         if response_data.get('success'):
+            # Stocker les informations d'authentification dans la session
             session['access_token'] = response_data.get('access_token')
             session['refresh_token'] = response_data.get('refresh_token')
+            session['token_type'] = response_data.get('token_type', 'Bearer')
             session['token_expiry'] = datetime.now().timestamp() + response_data.get('expires_in', 3600)
             session['user_id'] = response_data.get('user_id')
+            
+            app.logger.info(f"Authentification réussie pour l'utilisateur {response_data.get('user_id')}")
+        else:
+            app.logger.warning(f"Validation OTP échouée: {response_data.get('message')}")
         
         return jsonify(response_data)
     
-    except Exception as e:
-        app.logger.error(f"Erreur lors de la validation OTP: {str(e)}")
+    except requests.exceptions.RequestException as e:
+        # Erreur de connexion ou timeout
+        app.logger.error(f"Erreur de connexion lors de la validation OTP: {str(e)}")
         return jsonify({
             "success": False,
-            "message": f"Erreur lors de la validation: {str(e)}"
+            "message": "Impossible de se connecter au serveur d'authentification. Veuillez réessayer."
+        }), 503
+    except Exception as e:
+        # Autres erreurs
+        app.logger.error(f"Erreur inattendue lors de la validation OTP: {str(e)}")
+        return jsonify({
+            "success": False,
+            "message": "Une erreur inattendue s'est produite. Veuillez réessayer ultérieurement."
         }), 500
 
 @app.route('/dashboard')
 @login_required
 def dashboard():
     """
-    Dashboard accessible uniquement après authentification réussie
+    Dashboard accessible uniquement après authentification réussie via le Portail Orange
+    Cette page représente ce que l'utilisateur verrait après une authentification réussie
     """
     # Calculer le temps restant avant expiration du token
     expiry_time = session.get('token_expiry', 0)
     current_time = datetime.now().timestamp()
     time_remaining = max(0, int(expiry_time - current_time))
     
+    app.logger.info(f"Accès au dashboard pour l'utilisateur {session.get('user_id')}")
+    
     return render_template('dashboard.html', 
                           user_id=session.get('user_id'),
                           token_type=session.get('token_type', 'Bearer'),
+                          access_token=session.get('access_token', '')[:10] + '...',
                           expires_in=time_remaining,
+                          mfa_login_url=MFA_LOGIN_URL,
                           now=dt.datetime.now())
 
 @app.route('/change-password')
 def change_password():
     """
-    Simulation de la page de changement de mot de passe pour le cas de première connexion
+    Page de changement de mot de passe pour le cas de première connexion
+    Cette route est utilisée lors d'une redirection spéciale pour les nouveaux utilisateurs
     """
     user_id = request.args.get('userId')
     token = request.args.get('token')
@@ -149,41 +194,12 @@ def change_password():
         flash('Paramètres manquants pour le changement de mot de passe', 'error')
         return redirect(url_for('error', message='missing_params'))
     
+    app.logger.info(f"Accès à la page de changement de mot de passe pour l'utilisateur {user_id} avec token {token[:5]}...")
     return render_template('change_password.html', 
                           user_id=user_id,
                           token=token,
                           is_otp=is_otp,
                           now=dt.datetime.now())
-
-@app.route('/set-password', methods=['POST'])
-def set_password():
-    """
-    Traitement du formulaire de changement de mot de passe
-    """
-    user_id = request.form.get('user_id')
-    token = request.form.get('token')
-    password = request.form.get('password')
-    confirm_password = request.form.get('confirm_password')
-    
-    if not user_id or not token or not password:
-        flash('Tous les champs sont obligatoires', 'error')
-        return redirect(url_for('change_password', userId=user_id, token=token, isOTP=True))
-    
-    if password != confirm_password:
-        flash('Les mots de passe ne correspondent pas', 'error')
-        return redirect(url_for('change_password', userId=user_id, token=token, isOTP=True))
-    
-    # En production, appeler l'API pour changer le mot de passe
-    # Ici, nous simulons juste une réussite
-    
-    # Après changement réussi, simuler une authentification complète
-    session['access_token'] = f"mock_access_token_after_password_change"
-    session['refresh_token'] = f"mock_refresh_token_after_password_change"
-    session['token_expiry'] = datetime.now().timestamp() + 3600
-    session['user_id'] = user_id
-    
-    flash('Mot de passe défini avec succès', 'success')
-    return redirect(url_for('dashboard'))
 
 @app.route('/logout')
 def logout():
@@ -206,8 +222,11 @@ def error():
 @login_required
 def user_info():
     """
-    API simulant la récupération des informations utilisateur
+    API qui utiliserait les tokens d'authentification pour récupérer 
+    les informations utilisateur depuis les services Orange
     """
+    # Dans une implémentation réelle, vous utiliseriez l'access_token pour
+    # appeler les API d'Orange et récupérer les informations utilisateur
     user_data = {
         "user_id": session.get('user_id', 'unknown'),
         "subscription": "Mobile Premium",
@@ -217,41 +236,34 @@ def user_info():
     }
     return jsonify(user_data)
 
-@app.route('/simulate-redirect')
-def simulate_redirect():
+# Route pour la page de démonstration du processus de redirection
+@app.route('/demo-redirect')
+def demo_redirect():
     """
-    Simule une redirection depuis le Portail Orange avec un token OTP
-    Utile pour les tests sans avoir à passer par le portail réel
+    Cette page permet de démontrer le processus de redirection
+    En production, la redirection viendrait du Portail Orange, pas de cette page
     """
-    otp_type = request.args.get('type', 'valid')
-    
-    if otp_type == 'valid':
-        otp_token = 'valid_' + os.urandom(16).hex()
-    elif otp_type == 'invalid':
-        otp_token = 'invalid_' + os.urandom(16).hex()
-    elif otp_type == 'expired':
-        otp_token = 'expired_' + os.urandom(16).hex()
-    else:
-        otp_token = os.urandom(16).hex()
-    
-    redirect_url = url_for('auth_callback', otp_token=otp_token, _external=True)
-    return render_template('simulate_redirect.html', redirect_url=redirect_url, otp_token=otp_token, now=dt.datetime.now())
-
-@app.route('/simulate-first-login')
-def simulate_first_login():
-    """
-    Simule le cas de première connexion avec redirection vers la page de changement de mot de passe
-    """
-    user_id = 'user_' + os.urandom(4).hex()
-    token = 'otp_' + os.urandom(8).hex()
-    
-    redirect_url = url_for('change_password', userId=user_id, token=token, isOTP=True, _external=True)
-    return render_template('simulate_redirect.html', redirect_url=redirect_url, otp_token='', now=dt.datetime.now())
+    app.logger.info("Accès à la page de démonstration du processus de redirection")
+    return render_template('demo_redirect.html', 
+                          mfa_login_url=MFA_LOGIN_URL,
+                          PORTAIL_API_URL=PORTAIL_API_URL,
+                          now=dt.datetime.now())
 
 if __name__ == '__main__':
-    # Créer les dossiers templates et static s'ils n'existent pas
+    # S'assurer que les dossiers nécessaires existent
     os.makedirs('templates', exist_ok=True)
     os.makedirs('static', exist_ok=True)
     
+    # Configurer les variables d'environnement par défaut si elles ne sont pas définies
+    if not os.environ.get('PORTAIL_API_URL'):
+        app.logger.warning("PORTAIL_API_URL non défini dans l'environnement, utilisation de la valeur par défaut")
+    
+    # Informations de démarrage
+    app.logger.info(f"Démarrage de l'application Selfcare OTP Integration Demo")
+    app.logger.info(f"Portail Orange API URL: {PORTAIL_API_URL}")
+    app.logger.info(f"MFA Login URL: {MFA_LOGIN_URL}")
+    
+    # Démarrer le serveur
     port = int(os.environ.get('PORT', 5000))
+    app.logger.info(f"Serveur démarré sur le port {port}")
     app.run(host='0.0.0.0', port=port, debug=True)
