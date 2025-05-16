@@ -65,7 +65,7 @@ def auth_callback():
     if not otp_token:
         app.logger.warning("Tentative d'accès au callback sans token OTP")
         flash('Aucun token OTP trouvé dans l\'URL. La redirection depuis le Portail Orange est incorrecte.', 'error')
-        return redirect(url_for('error', message='missing_token'))
+        return redirect(url_for('error_page', message='missing_token'))
     
     # Masquer partiellement le token dans les logs pour des raisons de sécurité
     masked_token = f"{otp_token[:8]}...{otp_token[-4:] if len(otp_token) > 12 else ''}"
@@ -90,11 +90,11 @@ def auth_callback():
         else:
             # En cas d'échec, rediriger vers la page d'erreur
             flash(result.get('message', 'Échec de validation du token OTP.'), 'error')
-            return redirect(url_for('error', message='invalid_token'))
+            return redirect(url_for('error_page', message='invalid_token'))
     except Exception as e:
         app.logger.error(f"Erreur lors de la validation automatique du token OTP: {str(e)}")
         flash('Une erreur est survenue lors de la validation du token.', 'error')
-        return redirect(url_for('error', message='validation_error'))
+        return redirect(url_for('error_page', message='validation_error'))
     """
     
     # Passer le token à la page de traitement pour validation interactive
@@ -233,7 +233,7 @@ def change_password():
     
     if not user_id or not token:
         flash('Paramètres manquants pour le changement de mot de passe', 'error')
-        return redirect(url_for('error', message='missing_params'))
+        return redirect(url_for('error_page', message='missing_params'))
     
     app.logger.info(f"Accès à la page de changement de mot de passe pour l'utilisateur {user_id} avec token {token[:5]}...")
     return render_template('change_password.html', 
@@ -278,8 +278,8 @@ def user_info():
     return jsonify(user_data)
 
 # Route pour la page d'erreur
-@app.route('/error')
-def error():
+@app.route('/error-page')
+def error_page():
     """
     Page d'erreur qui affiche des informations détaillées sur les erreurs d'authentification
     Le paramètre 'message' identifie le type d'erreur à afficher
