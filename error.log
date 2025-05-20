@@ -1,141 +1,36 @@
-127.0.0.1 - - [16/May/2025:15:13:54 +0000] "GET /static/css/style.css HTTP/1.1" 200 0 "https://test-mfa-kq6e.onrender.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
-127.0.0.1 - - [16/May/2025:15:13:54 +0000] "GET /static/img/orange-logo.svg HTTP/1.1" 200 0 "https://test-mfa-kq6e.onrender.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
-127.0.0.1 - - [16/May/2025:15:13:54 +0000] "GET /static/js/main.js HTTP/1.1" 200 0 "https://test-mfa-kq6e.onrender.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
-127.0.0.1 - - [16/May/2025:15:13:54 +0000] "GET /static/img/favicon.ico HTTP/1.1" 200 0 "https://test-mfa-kq6e.onrender.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
-[2025-05-16 15:14:30,787] INFO in app: Détection d'un token OTP dans la route racine, redirection vers auth-callback
---- Logging error ---
-Traceback (most recent call last):
-  File "/usr/local/lib/python3.11/logging/__init__.py", line 449, in format
-    return self._format(record)
-           ^^^^^^^^^^^^^^^^^^^^
-  File "/usr/local/lib/python3.11/logging/__init__.py", line 445, in _format
-    return self._fmt % values
-           ~~~~~~~~~~^~~~~~~~
-KeyError: 'remote_addr'
-During handling of the above exception, another exception occurred:
-Traceback (most recent call last):
-  File "/usr/local/lib/python3.11/logging/__init__.py", line 1110, in emit
-    msg = self.format(record)
-          ^^^^^^^^^^^^^^^^^^^
-  File "/usr/local/lib/python3.11/logging/__init__.py", line 953, in format
-    return fmt.format(record)
-           ^^^^^^^^^^^^^^^^^^
-  File "/usr/local/lib/python3.11/logging/__init__.py", line 690, in format
-    s = self.formatMessage(record)
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/local/lib/python3.11/logging/__init__.py", line 659, in formatMessage
-    return self._style.format(record)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/local/lib/python3.11/logging/__init__.py", line 451, in format
-    raise ValueError('Formatting field not found in record: %s' % e)
-ValueError: Formatting field not found in record: 'remote_addr'
-Call stack:
-  File "/opt/render/project/src/.venv/bin/gunicorn", line 8, in <module>
-    sys.exit(run())
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/app/wsgiapp.py", line 67, in run
-    WSGIApplication("%(prog)s [OPTIONS] [APP_MODULE]").run()
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/app/base.py", line 236, in run
-    super().run()
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/app/base.py", line 72, in run
-    Arbiter(self).run()
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 202, in run
-    self.manage_workers()
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 571, in manage_workers
-    self.spawn_workers()
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 642, in spawn_workers
-    self.spawn_worker()
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 609, in spawn_worker
-    worker.init_process()
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/workers/base.py", line 142, in init_process
-    self.run()
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 126, in run
-    self.run_for_one(timeout)
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 70, in run_for_one
-    self.accept(listener)
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 32, in accept
-    self.handle(listener, client, addr)
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 135, in handle
-    self.handle_request(listener, req, client, addr)
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 178, in handle_request
-    respiter = self.wsgi(environ, resp.start_response)
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/flask/app.py", line 2213, in __call__
-    return self.wsgi_app(environ, start_response)
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/flask/app.py", line 2190, in wsgi_app
-    response = self.full_dispatch_request()
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/flask/app.py", line 1484, in full_dispatch_request
-    rv = self.dispatch_request()
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/flask/app.py", line 1469, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
-  File "/opt/render/project/src/app.py", line 68, in index
-    app.logger.info(f"Détection d'un token OTP dans la route racine, redirection vers auth-callback")
-Message: "Détection d'un token OTP dans la route racine, redirection vers auth-callback"
-Arguments: ()
-127.0.0.1 - - [16/May/2025:15:14:30 +0000] "GET /?otp_token=RcUjePvr9RkLsU1LbJUZ93ezGZawG3pK HTTP/1.1" 302 301 "https://acc.portail.orange.lu/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
-[2025-05-16 15:14:30,852] INFO in app: Redirection reçue avec token OTP: RcUjePvr...G3pK (source: selfcare)
---- Logging error ---
-Traceback (most recent call last):
-  File "/usr/local/lib/python3.11/logging/__init__.py", line 449, in format
-    return self._format(record)
-           ^^^^^^^^^^^^^^^^^^^^
-  File "/usr/local/lib/python3.11/logging/__init__.py", line 445, in _format
-    return self._fmt % values
-           ~~~~~~~~~~^~~~~~~~
-KeyError: 'remote_addr'
-During handling of the above exception, another exception occurred:
-Traceback (most recent call last):
-  File "/usr/local/lib/python3.11/logging/__init__.py", line 1110, in emit
-    msg = self.format(record)
-          ^^^^^^^^^^^^^^^^^^^
-  File "/usr/local/lib/python3.11/logging/__init__.py", line 953, in format
-    return fmt.format(record)
-           ^^^^^^^^^^^^^^^^^^
-  File "/usr/local/lib/python3.11/logging/__init__.py", line 690, in format
-    s = self.formatMessage(record)
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/local/lib/python3.11/logging/__init__.py", line 659, in formatMessage
-    return self._style.format(record)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/local/lib/python3.11/logging/__init__.py", line 451, in format
-    raise ValueError('Formatting field not found in record: %s' % e)
-ValueError: Formatting field not found in record: 'remote_addr'
-Call stack:
-  File "/opt/render/project/src/.venv/bin/gunicorn", line 8, in <module>
-    sys.exit(run())
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/app/wsgiapp.py", line 67, in run
-    WSGIApplication("%(prog)s [OPTIONS] [APP_MODULE]").run()
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/app/base.py", line 236, in run
-    super().run()
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/app/base.py", line 72, in run
-    Arbiter(self).run()
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 202, in run
-    self.manage_workers()
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 571, in manage_workers
-    self.spawn_workers()
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 642, in spawn_workers
-    self.spawn_worker()
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 609, in spawn_worker
-    worker.init_process()
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/workers/base.py", line 142, in init_process
-    self.run()
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 126, in run
-    self.run_for_one(timeout)
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 70, in run_for_one
-    self.accept(listener)
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 32, in accept
-    self.handle(listener, client, addr)
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 135, in handle
-    self.handle_request(listener, req, client, addr)
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 178, in handle_request
-    respiter = self.wsgi(environ, resp.start_response)
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/flask/app.py", line 2213, in __call__
-    return self.wsgi_app(environ, start_response)
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/flask/app.py", line 2190, in wsgi_app
-    response = self.full_dispatch_request()
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/flask/app.py", line 1484, in full_dispatch_request
-    rv = self.dispatch_request()
-  File "/opt/render/project/src/.venv/lib/python3.11/site-packages/flask/app.py", line 1469, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
-  File "/opt/render/project/src/app.py", line 98, in auth_callback
-    app.logger.info(f"Redirection reçue avec token OTP: {masked_token} (source: {source})")
-Message: 'Redirection reçue avec token OTP: RcUjePvr...G3pK (source: selfcare)'
-Arguments: ()
+==> Running 'gunicorn app:app'
+[2025-05-20 13:51:39 +0000] [65] [INFO] Starting gunicorn 21.2.0
+[2025-05-20 13:51:39 +0000] [65] [INFO] Listening at: http://0.0.0.0:10000 (65)
+[2025-05-20 13:51:39 +0000] [65] [INFO] Using worker: sync
+[2025-05-20 13:51:39 +0000] [66] [INFO] Booting worker with pid: 66
+127.0.0.1 - - [20/May/2025:13:51:43 +0000] "GET /favicon.ico HTTP/1.1" 404 207 "https://test-mfa-kq6e.onrender.com/?otp_token=5bPVtIUJzvICzt1aeBikS8bl7q439eKn" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+[2025-05-20 13:51:43,885] INFO in app: Détection d'un token OTP dans la route racine, redirection vers auth-callback
+127.0.0.1 - - [20/May/2025:13:51:43 +0000] "HEAD /?otp_token=5bPVtIUJzvICzt1aeBikS8bl7q439eKn HTTP/1.1" 302 0 "https://test-mfa-kq6e.onrender.com/?otp_token=5bPVtIUJzvICzt1aeBikS8bl7q439eKn" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+[2025-05-20 13:51:43,899] INFO in app: Détection d'un token OTP dans la route racine, redirection vers auth-callback
+127.0.0.1 - - [20/May/2025:13:51:43 +0000] "HEAD /?otp_token=5bPVtIUJzvICzt1aeBikS8bl7q439eKn HTTP/1.1" 302 0 "https://test-mfa-kq6e.onrender.com/?otp_token=5bPVtIUJzvICzt1aeBikS8bl7q439eKn" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+[2025-05-20 13:51:43,949] INFO in app: Détection d'un token OTP dans la route racine, redirection vers auth-callback
+127.0.0.1 - - [20/May/2025:13:51:43 +0000] "HEAD /?otp_token=5bPVtIUJzvICzt1aeBikS8bl7q439eKn HTTP/1.1" 302 0 "https://test-mfa-kq6e.onrender.com/?otp_token=5bPVtIUJzvICzt1aeBikS8bl7q439eKn" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+[2025-05-20 13:51:43,974] INFO in app: Redirection reçue avec token OTP: 5bPVtIUJ...9eKn (source: selfcare)
+[2025-05-20 13:51:43,974] INFO in app: Tentative de validation automatique du token côté serveur
+[2025-05-20 13:51:43,975] INFO in app: Validation du token OTP 5bPVtIUJ...9eKn auprès de https://acc.portail.orange.lu/resolve-otp
+[2025-05-20 13:51:44,256] INFO in app: Réponse du Portail Orange: HTTP 403
+[2025-05-20 13:51:44,257] ERROR in app: Erreur HTTP 403 lors de la validation OTP: <!doctype html><meta charset="utf-8"><meta name=viewport content="width=device-width, initial-scale=1"><title>403</title>403 Forbidden
+[2025-05-20 13:51:44,258] INFO in app: Résultat de validation: False, message: Erreur lors de la communication avec le Portail Orange: 403
+[2025-05-20 13:51:44,259] WARNING in app: Validation OTP échouée: Erreur lors de la communication avec le Portail Orange: 403
+127.0.0.1 - - [20/May/2025:13:51:44 +0000] "HEAD /auth-callback?otp_token=5bPVtIUJzvICzt1aeBikS8bl7q439eKn HTTP/1.1" 200 0 "https://test-mfa-kq6e.onrender.com/?otp_token=5bPVtIUJzvICzt1aeBikS8bl7q439eKn" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+[2025-05-20 13:51:44,593] INFO in app: Détection d'un token OTP dans la route racine, redirection vers auth-callback
+127.0.0.1 - - [20/May/2025:13:51:44 +0000] "HEAD /?otp_token=5bPVtIUJzvICzt1aeBikS8bl7q439eKn HTTP/1.1" 302 0 "https://test-mfa-kq6e.onrender.com/?otp_token=5bPVtIUJzvICzt1aeBikS8bl7q439eKn" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+[2025-05-20 13:51:44,792] INFO in app: Détection d'un token OTP dans la route racine, redirection vers auth-callback
+127.0.0.1 - - [20/May/2025:13:51:44 +0000] "GET /?otp_token=5bPVtIUJzvICzt1aeBikS8bl7q439eKn HTTP/1.1" 302 301 "https://test-mfa-kq6e.onrender.com/?otp_token=5bPVtIUJzvICzt1aeBikS8bl7q439eKn" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+[2025-05-20 13:51:44,914] INFO in app: Redirection reçue avec token OTP: 5bPVtIUJ...9eKn (source: selfcare)
+[2025-05-20 13:51:44,914] INFO in app: Tentative de validation automatique du token côté serveur
+[2025-05-20 13:51:44,915] INFO in app: Validation du token OTP 5bPVtIUJ...9eKn auprès de https://acc.portail.orange.lu/resolve-otp
+[2025-05-20 13:51:45,057] INFO in app: Réponse du Portail Orange: HTTP 403
+[2025-05-20 13:51:45,057] ERROR in app: Erreur HTTP 403 lors de la validation OTP: <!doctype html><meta charset="utf-8"><meta name=viewport content="width=device-width, initial-scale=1"><title>403</title>403 Forbidden
+[2025-05-20 13:51:45,059] INFO in app: Résultat de validation: False, message: Erreur lors de la communication avec le Portail Orange: 403
+[2025-05-20 13:51:45,059] WARNING in app: Validation OTP échouée: Erreur lors de la communication avec le Portail Orange: 403
+127.0.0.1 - - [20/May/2025:13:51:45 +0000] "GET /auth-callback?otp_token=5bPVtIUJzvICzt1aeBikS8bl7q439eKn HTTP/1.1" 200 17976 "https://test-mfa-kq6e.onrender.com/?otp_token=5bPVtIUJzvICzt1aeBikS8bl7q439eKn" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+127.0.0.1 - - [20/May/2025:13:51:45 +0000] "GET /static/img/orange-logo.svg HTTP/1.1" 304 0 "https://test-mfa-kq6e.onrender.com/auth-callback?otp_token=5bPVtIUJzvICzt1aeBikS8bl7q439eKn" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+127.0.0.1 - - [20/May/2025:13:51:45 +0000] "GET /static/css/style.css HTTP/1.1" 304 0 "https://test-mfa-kq6e.onrender.com/auth-callback?otp_token=5bPVtIUJzvICzt1aeBikS8bl7q439eKn" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+127.0.0.1 - - [20/May/2025:13:51:45 +0000] "GET /static/js/main.js HTTP/1.1" 304 0 "https://test-mfa-kq6e.onrender.com/auth-callback?otp_token=5bPVtIUJzvICzt1aeBikS8bl7q439eKn" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+127.0.0.1 - - [20/May/2025:13:51:45 +0000] "GET /static/img/favicon.ico HTTP/1.1" 304 0 "https://test-mfa-kq6e.onrender.com/auth-callback?otp_token=5bPVtIUJzvICzt1aeBikS8bl7q439eKn" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"

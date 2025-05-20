@@ -206,7 +206,7 @@
         // Mise à jour de l'étape d'extraction
         if (otpToken) {
             stepExtraction.classList.add('step-completed');
-            stepExtraction.querySelector('.step-content p').textContent = 'Le token OTP a été extrait avec succès de l'URL de redirection.';
+            stepExtraction.querySelector('.step-content p').textContent = 'Le token OTP a été extrait avec succès de l\'URL de redirection.';
         } else {
             stepExtraction.classList.add('step-error');
             stepExtraction.querySelector('.step-content p').textContent = 'Erreur: Aucun token OTP n\'a été trouvé dans l\'URL de redirection.';
@@ -291,10 +291,11 @@
             // Définir l'URL de l'endpoint de validation clairement
             const validateUrl = '{{ url_for("validate_otp") }}';
             
-            // Préparer les données pour débogage
-            const postData = { 
+            // Préparer les données pour la requête
+            // Utiliser 'netlify' comme source pour assurer la compatibilité avec l'API du Portail Orange
+            const postData = {
                 otp_token: otpToken,
-                source: source
+                source: 'netlify'  // Utiliser toujours 'netlify' comme source pour la compatibilité
             };
             
             // Afficher des logs détaillés
@@ -321,9 +322,14 @@
             console.log('Envoi de la requête de validation OTP via fetch');
             fetch(validateUrl, {
                 method: 'POST',
-                headers: headers,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
                 body: jsonBody,
-                credentials: 'include'
+                credentials: 'include',
+                mode: 'cors'  // Spécifier explicitement le mode CORS
             })
             .then(response => {
                 console.log('Réponse reçue, statut HTTP:', response.status);
