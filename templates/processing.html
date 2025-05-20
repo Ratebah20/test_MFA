@@ -322,7 +322,12 @@
                     });
                     
                     console.log('Réponse reçue, statut HTTP:', response.status);
-                    console.log('En-têtes de réponse:', [...response.headers.entries()].reduce((obj, [key, val]) => { obj[key] = val; return obj; }, {}));
+                    // Convertir les en-têtes en objet pour l'affichage
+                    const headersObject = {};
+                    response.headers.forEach((value, key) => {
+                        headersObject[key] = value;
+                    });
+                    console.log('En-têtes de réponse:', headersObject);
                     
                     // Convertir la réponse en JSON
                     const data = await response.json();
@@ -426,8 +431,10 @@
                     
                     xhr.send(jsonBody);
                 });
-            })
-        .then(data => {
+            }
+            
+            // Fonction pour traiter les résultats de validation (non utilisée directement)
+            function processValidationResult(data) {
             console.log('Données de réponse:', data);
             
             // Mettre à jour la barre de progression
@@ -482,19 +489,21 @@
                 addButton('Retour à l\'accueil', '{{ url_for("index") }}', 'primary-btn');
                 addButton('Réessayer avec le Portail Orange', '{{ mfa_login_url }}', 'secondary-btn');
             }
-        })
-        .catch(error => {
-            console.error('Erreur lors de la validation:', error);
             
-            // Mettre à jour la barre de progression pour indiquer une erreur
-            progressBar.style.width = '100%';
-            progressBar.classList.add('error-progress');
-            
-            // Mettre à jour l'étape de validation pour montrer l'erreur
-            stepValidation.classList.remove('step-current');
-            stepValidation.classList.add('step-error');
-            stepValidation.querySelector('.step-icon').innerHTML = '<div class="step-error-icon">✗</div>';
-            stepValidation.querySelector('.step-content p').textContent = 'Erreur technique lors de la communication avec le serveur.';
+            // Fonction pour gérer les erreurs de validation
+            function handleValidationError(error) {
+                console.error('Erreur lors de la validation:', error);
+                
+                // Mettre à jour la barre de progression pour indiquer une erreur
+                progressBar.style.width = '100%';
+                progressBar.classList.add('error-progress');
+                
+                // Mettre à jour l'étape de validation pour montrer l'erreur
+                stepValidation.classList.remove('step-current');
+                stepValidation.classList.add('step-error');
+                stepValidation.querySelector('.step-icon').innerHTML = '<div class="step-error-icon">✗</div>';
+                stepValidation.querySelector('.step-content p').textContent = 'Erreur technique lors de la communication avec le serveur.';
+            }
             
             // Affichage des erreurs techniques
             validationResult.style.display = 'block';

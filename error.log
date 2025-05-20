@@ -23,7 +23,35 @@
 [2025-05-20 13:51:44,792] INFO in app: Détection d'un token OTP dans la route racine, redirection vers auth-callback
 127.0.0.1 - - [20/May/2025:13:51:44 +0000] "GET /?otp_token=5bPVtIUJzvICzt1aeBikS8bl7q439eKn HTTP/1.1" 302 301 "https://test-mfa-kq6e.onrender.com/?otp_token=5bPVtIUJzvICzt1aeBikS8bl7q439eKn" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
 [2025-05-20 13:51:44,914] INFO in app: Redirection reçue avec token OTP: 5bPVtIUJ...9eKn (source: selfcare)
-[2025-05-20 13:51:44,914] INFO in app: Tentative de validation automatique du token côté serveur
+[2025-05-20 13:51:44,914] INFO in 127.0.0.1 - - [20/May/2025:19:28:06 +0000] "GET /static/img/favicon.ico HTTP/1.1" 304 0 "https://test-mfa-kq6e.onrender.com/auth-callback?otp_token=YmbTIkrNmhBWchdI2hexz2dnLbD0J9sq" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+==> Detected service running on port 10000
+==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
+[2025-05-20 19:29:43,806] INFO in app: Accès à la page d'accueil
+127.0.0.1 - - [20/May/2025:19:29:43 +0000] "GET / HTTP/1.1" 200 4184 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+127.0.0.1 - - [20/May/2025:19:29:43 +0000] "GET /static/css/style.css HTTP/1.1" 304 0 "https://test-mfa-kq6e.onrender.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+127.0.0.1 - - [20/May/2025:19:29:44 +0000] "GET /static/img/orange-logo.svg HTTP/1.1" 304 0 "https://test-mfa-kq6e.onrender.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+127.0.0.1 - - [20/May/2025:19:29:44 +0000] "GET /static/js/main.js HTTP/1.1" 304 0 "https://test-mfa-kq6e.onrender.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+127.0.0.1 - - [20/May/2025:19:29:44 +0000] "GET /static/img/favicon.ico HTTP/1.1" 304 0 "https://test-mfa-kq6e.onrender.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+[2025-05-20 19:31:42,565] INFO in app: Accès à la page d'accueil
+127.0.0.1 - - [20/May/2025:19:31:42 +0000] "GET / HTTP/1.1" 200 4184 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+127.0.0.1 - - [20/May/2025:19:31:42 +0000] "GET /static/css/style.css HTTP/1.1" 304 0 "https://test-mfa-kq6e.onrender.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+127.0.0.1 - - [20/May/2025:19:31:42 +0000] "GET /static/img/orange-logo.svg HTTP/1.1" 304 0 "https://test-mfa-kq6e.onrender.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+127.0.0.1 - - [20/May/2025:19:31:42 +0000] "GET /static/js/main.js HTTP/1.1" 304 0 "https://test-mfa-kq6e.onrender.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+127.0.0.1 - - [20/May/2025:19:31:43 +0000] "GET /static/img/favicon.ico HTTP/1.1" 304 0 "https://test-mfa-kq6e.onrender.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+[2025-05-20 19:32:20,963] INFO in app: Détection d'un token OTP dans la route racine, redirection vers auth-callback
+127.0.0.1 - - [20/May/2025:19:32:20 +0000] "GET /?otp_token=m45nqWwHMiINb2s8R9N2VwKs9TNroGmg HTTP/1.1" 302 301 "https://acc.portail.orange.lu/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+[2025-05-20 19:32:21,174] INFO in app: Redirection reçue avec token OTP: m45nqWwH...oGmg (source: selfcare)
+[2025-05-20 19:32:21,174] INFO in app: Tentative de validation automatique du token côté serveur
+[2025-05-20 19:32:21,174] INFO in app: Validation du token OTP m45nqWwH...oGmg auprès de https://acc.portail.orange.lu/resolve-otp
+[2025-05-20 19:32:21,588] INFO in app: Réponse du Portail Orange: HTTP 403
+[2025-05-20 19:32:21,588] ERROR in app: Erreur HTTP 403 lors de la validation OTP: <!doctype html><meta charset="utf-8"><meta name=viewport content="width=device-width, initial-scale=1"><title>403</title>403 Forbidden
+[2025-05-20 19:32:21,589] INFO in app: Résultat de validation: False, message: Erreur lors de la communication avec le Portail Orange: 403
+[2025-05-20 19:32:21,589] WARNING in app: Validation OTP échouée: Erreur lors de la communication avec le Portail Orange: 403
+127.0.0.1 - - [20/May/2025:19:32:21 +0000] "GET /auth-callback?otp_token=m45nqWwHMiINb2s8R9N2VwKs9TNroGmg HTTP/1.1" 200 22296 "https://acc.portail.orange.lu/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+127.0.0.1 - - [20/May/2025:19:32:21 +0000] "GET /static/css/style.css HTTP/1.1" 304 0 "https://test-mfa-kq6e.onrender.com/auth-callback?otp_token=m45nqWwHMiINb2s8R9N2VwKs9TNroGmg" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+127.0.0.1 - - [20/May/2025:19:32:21 +0000] "GET /static/js/main.js HTTP/1.1" 304 0 "https://test-mfa-kq6e.onrender.com/auth-callback?otp_token=m45nqWwHMiINb2s8R9N2VwKs9TNroGmg" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+127.0.0.1 - - [20/May/2025:19:32:21 +0000] "GET /static/img/orange-logo.svg HTTP/1.1" 304 0 "https://test-mfa-kq6e.onrender.com/auth-callback?otp_token=m45nqWwHMiINb2s8R9N2VwKs9TNroGmg" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+127.0.0.1 - - [20/May/2025:19:32:21 +0000] "GET /static/img/favicon.ico HTTP/1.1" 304 0 "https://test-mfa-kq6e.onrender.com/auth-callback?otp_token=m45nqWwHMiINb2s8R9N2VwKs9TNroGmg" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"app: Tentative de validation automatique du token côté serveur
 [2025-05-20 13:51:44,915] INFO in app: Validation du token OTP 5bPVtIUJ...9eKn auprès de https://acc.portail.orange.lu/resolve-otp
 [2025-05-20 13:51:45,057] INFO in app: Réponse du Portail Orange: HTTP 403
 [2025-05-20 13:51:45,057] ERROR in app: Erreur HTTP 403 lors de la validation OTP: <!doctype html><meta charset="utf-8"><meta name=viewport content="width=device-width, initial-scale=1"><title>403</title>403 Forbidden
