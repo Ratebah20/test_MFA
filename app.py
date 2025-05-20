@@ -152,29 +152,25 @@ def auth_callback():
                               PORTAIL_API_URL=PORTAIL_API_URL,
                               now=dt.datetime.now())
 
-def validate_token_with_api(otp_token, source='netlify'):
+def validate_token_with_api(otp_token, source='selfcare'):
     """
     Fonction utilitaire pour valider un token OTP auprès du Portail Orange API
-    Utilise 'netlify' comme source pour assurer la compatibilité avec l'API du Portail Orange
     """
     # Tronquer le token pour les logs pour des raisons de sécurité
-    masked_token = f"{otp_token[:8]}...{otp_token[-4:] if len(otp_token) > 8 else ''}"
+    masked_token = f"{otp_token[:8]}...{otp_token[-4:] if len(otp_token) > 12 else ''}"
     app.logger.info(f"Validation du token OTP {masked_token} auprès de {OTP_RESOLVE_ENDPOINT}")
     
     try:
         # Appel à l'API du Portail Orange pour valider le token OTP
-        # Utiliser 'netlify' comme source pour assurer la compatibilité avec l'API
-        app.logger.info(f"Envoi de la requête avec source='netlify' pour assurer la compatibilité")
         response = requests.post(
             OTP_RESOLVE_ENDPOINT,
             json={
                 "otp_token": otp_token,
-                "source": "netlify"  # Utiliser toujours 'netlify' comme source
+                "source": source
             },
             headers={
                 'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Origin': 'https://test-mfa-kq6e.onrender.com'  # Ajouter l'origine explicitement
+                'Accept': 'application/json'
             },
             timeout=10
         )

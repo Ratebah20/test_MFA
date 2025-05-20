@@ -292,10 +292,10 @@
             const validateUrl = '{{ url_for("validate_otp") }}';
             
             // Préparer les données pour la requête
-            // Utiliser 'netlify' comme source pour assurer la compatibilité avec l'API du Portail Orange
+            // Utiliser la variable "source" déterminée côté serveur (par défaut "selfcare")
             const postData = {
                 otp_token: otpToken,
-                source: 'netlify'  // Utiliser toujours 'netlify' comme source pour la compatibilité
+                source: source  // Garder la cohérence avec la valeur attendue par l'API du Portail Orange
             };
             
             // Afficher des logs détaillés
