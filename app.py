@@ -212,8 +212,9 @@ def validate_token_with_api(otp_token, source='selfcare'):
 @app.route('/validate-otp', methods=['POST'])
 def validate_otp():
     """
-    API pour valider le token OTP auprès du serveur MFA
-    Cette fonction représente le cœur de l'intégration entre Selfcare et le Portail Orange
+    Endpoint pour valider un token OTP (déprécié)
+    Cet endpoint est conservé pour la compatibilité arrière, mais la validation est maintenant
+    effectuée directement par le navigateur client.
     """
     app.logger.info(f"Requête POST reçue sur /validate-otp avec Content-Type: {request.headers.get('Content-Type')}")
     
@@ -228,43 +229,23 @@ def validate_otp():
         
         # Récupérer les données
         data = request.json
-        app.logger.info(f"Données JSON reçues: {data}")
-        
         otp_token = data.get('otp_token')
-        source = data.get('source', 'selfcare')
         
         if not otp_token:
             app.logger.warning("Tentative de validation sans token OTP")
             return jsonify({
-                "success": False,
-                "message": "Token OTP manquant"
+                'success': False,
+                'message': "Aucun token OTP n'a été fourni"
             }), 400
         
-        # Masquer le token pour les logs
-        masked_token = f"{otp_token[:4]}...{otp_token[-4:] if len(otp_token) > 8 else ''}" 
-        app.logger.info(f"Début de validation pour token: {masked_token}, source: {source}")
+        # Informer que cet endpoint est déprécié
+        app.logger.info("L'endpoint /validate_otp est déprécié. Utilisez plutôt la validation directe côté client.")
         
-        # Valider le token avec l'API
-        app.logger.info(f"Appel de l'API du Portail Orange: {OTP_RESOLVE_ENDPOINT}")
-        result = validate_token_with_api(otp_token, source)
-        
-        # Si la validation est réussie, stocker les tokens en session
-        if result.get('success'):
-            # Stocker les informations d'authentification dans la session
-            session['access_token'] = result.get('access_token')
-            session['refresh_token'] = result.get('refresh_token')
-            session['token_type'] = result.get('token_type', 'Bearer')
-            session['token_expiry'] = datetime.now().timestamp() + result.get('expires_in', 3600)
-            session['user_id'] = result.get('user_id')
-            
-            app.logger.info(f"Authentification réussie pour l'utilisateur {result.get('user_id')}")
-        else:
-            app.logger.warning(f"Validation OTP échouée: {result.get('message')}")
-        
-        # On retourne le résultat brut de l'API pour que le frontend puisse l'afficher
-        http_status = 200 if result.get('success') else 400
-        app.logger.info(f"Réponse renvoyée au client avec statut HTTP {http_status}")
-        return jsonify(result), http_status
+        return jsonify({
+            "success": False,
+            "message": "Cet endpoint est déprécié. La validation OTP doit maintenant être effectuée directement par le client.",
+            "deprecated": True
+        }), 400
     
     except Exception as e:
         # Capturer toutes les erreurs possibles
@@ -274,6 +255,73 @@ def validate_otp():
         return jsonify({
             "success": False,
             "message": f"Erreur serveur lors de la validation: {str(e)}"
+        }), 500
+
+@app.route('/validation-success', methods=['POST'])
+def validation_success():
+    """
+    Endpoint pour traiter le résultat de validation réussie transmis par le frontend
+    Après validation réussie du token OTP directement avec le Portail Orange,
+    le client informe le backend du résultat pour mettre à jour la session.
+    """
+    app.logger.info(f"Requête POST reçue sur /validation-success avec Content-Type: {request.headers.get('Content-Type')}")
+    
+    try:
+        # Vérifier le format de la requête
+        if not request.is_json:
+            app.logger.error(f"Requête non-JSON reçue: {request.data[:100]}")
+            return jsonify({
+                "success": False,
+                "message": "Format de requête invalide, JSON attendu"
+            }), 400
+        
+        # Récupérer les données
+        data = request.json
+        app.logger.info(f"Données reçues du client pour la validation réussie")
+        
+        validation_result = data.get('validation_result', False)
+        user_id = data.get('user_id', '')
+        auth_data = data.get('auth_data', {})
+        
+        if not validation_result:
+            app.logger.warning("Validation OTP échouée transmise par le frontend")
+            return jsonify({
+                'success': False,
+                'message': "La validation du token OTP a échoué"
+            }), 400
+        
+        # Stocker l'authentification réussie dans la session
+        session['authenticated'] = True
+        session['auth_time'] = dt.datetime.now().isoformat()
+        session['user_id'] = user_id or "user_123"  # Utiliser l'ID fourni ou une valeur par défaut
+        
+        # Si nous avons des données d'authentification, les stocker également
+        if auth_data:
+            # Masquer les tokens pour le log
+            masked_auth = auth_data.copy() if isinstance(auth_data, dict) else {}
+            if 'access_token' in masked_auth:
+                masked_auth['access_token'] = f"{masked_auth['access_token'][:8]}..." if masked_auth['access_token'] else ''
+            if 'refresh_token' in masked_auth:
+                masked_auth['refresh_token'] = f"{masked_auth['refresh_token'][:8]}..." if masked_auth['refresh_token'] else ''
+            
+            app.logger.info(f"Données d'authentification reçues: {masked_auth}")
+            session['auth_data'] = auth_data
+        
+        app.logger.info(f"Validation OTP réussie pour l'utilisateur {user_id}, session authentifiée")
+        return jsonify({
+            'success': True,
+            'message': "Session authentifiée avec succès",
+            'redirect': url_for('dashboard')
+        })
+        
+    except Exception as e:
+        # Capturer toutes les erreurs possibles
+        app.logger.error(f"Exception lors du traitement de la validation réussie: {str(e)}")
+        import traceback
+        app.logger.error(f"Traceback: {traceback.format_exc()}")
+        return jsonify({
+            "success": False,
+            "message": f"Erreur serveur lors du traitement de la validation réussie: {str(e)}"
         }), 500
 
 @app.route('/dashboard')
