@@ -78,6 +78,10 @@
                 <p id="error-message"></p>
             </div>
             
+            <div id="validation-details" class="validation-details" style="margin-top: 20px;">
+                <!-- Détails de la validation pour débogage -->
+            </div>
+            
             <div id="action-buttons" class="action-buttons" style="display: none;">
                 <!-- Les boutons seront ajoutés dynamiquement par JavaScript -->
             </div>
@@ -288,53 +292,67 @@
             {% endif %}
         } else {
             // Validation côté client normale
-            // Définir l'URL de l'endpoint de validation clairement
-            const validateUrl = '{{ url_for("validate_otp") }}';
+            // Approche directe qui fonctionne: appel à l'API du Portail Orange directement depuis le navigateur
+            // Cette approche est exactement la même que celle utilisée dans le fichier selfcare.html qui fonctionne
+            const validateUrl = 'https://acc.portail.orange.lu/resolve-otp';
             
-            // Préparer les données pour la requête
-            // Utiliser la variable "source" déterminée côté serveur (par défaut "selfcare")
-            const postData = {
-                otp_token: otpToken,
-                source: source  // Garder la cohérence avec la valeur attendue par l'API du Portail Orange
-            };
+            // Mettre à jour l'interface utilisateur
+            statusMessage.textContent = 'Validation en cours via l\'API du Portail Orange...';
+            console.log('Tentative de validation directe avec le token OTP:', otpToken.substring(0, 4) + '...');
             
-            // Afficher des logs détaillés
-            console.log('Début de la validation OTP');
-            console.log('URL de validation:', validateUrl);
-            console.log('Données à envoyer:', postData);
+            // Afficher les détails de validation pour débogage
+            document.getElementById('validation-details').innerHTML = '<div class="alert alert-info">Envoi de la requête en cours...</div>';
+            document.getElementById('validation-details').innerHTML += '<div>Tentative: fetch() avec appel direct à l\'API Portail Orange</div>';
             
-            // Définir explicitement les en-têtes
-            const headers = {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            };
-            console.log('En-têtes utilisées:', headers);
-            
-            // Convertir explicitement le corps en JSON
-            const jsonBody = JSON.stringify(postData);
-            console.log('Corps de la requête (JSON):', jsonBody);
-            
-            // Afficher un message dans l'interface utilisateur
-            statusMessage.textContent = 'Envoi de la requête au serveur...';
-            
-            // Essai avec fetch API
-            console.log('Envoi de la requête de validation OTP via fetch');
+            // Utilisation de fetch() directement vers l'API Portail Orange
             fetch(validateUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'Accept': 'application/json'
                 },
-                body: jsonBody,
+                body: JSON.stringify({ 
+                    otp_token: otpToken,
+                    source: 'netlify'  // Utiliser 'netlify' comme source exactement comme dans l'implémentation qui fonctionne
+                }),
                 credentials: 'include',
-                mode: 'cors'  // Spécifier explicitement le mode CORS
+                mode: 'cors'
             })
             .then(response => {
                 console.log('Réponse reçue, statut HTTP:', response.status);
                 console.log('En-têtes de réponse:', [...response.headers.entries()].reduce((obj, [key, val]) => { obj[key] = val; return obj; }, {}));
                 return response.json();
+            })
+            .then(data => {
+                console.log('Données de réponse:', data);
+                
+                // Mettre à jour l'interface utilisateur avec les résultats
+                if (data.success) {
+                    // Réussite
+                    statusMessage.textContent = "Validation réussie!";
+                    progressBar.style.width = "100%";
+                    progressBar.classList.remove('bg-info', 'bg-warning');
+                    progressBar.classList.add('bg-success');
+                    stepValidation.classList.add('step-completed');
+                    
+                    // Stocker les tokens pour utilisation future
+                    if (data.access_token) {
+                        sessionStorage.setItem('auth_data', JSON.stringify(data));
+                        console.log('Informations d\'authentification stockées');
+                    }
+                    
+                    // Rediriger vers le dashboard après un court délai
+                    setTimeout(() => {
+                        window.location.href = "/dashboard";
+                    }, 2000);
+                } else {
+                    // Échec
+                    statusMessage.textContent = "Erreur de validation";
+                    progressBar.style.width = "100%";
+                    progressBar.classList.remove('bg-info', 'bg-warning');
+                    progressBar.classList.add('bg-danger');
+                    stepValidation.classList.add('step-error');
+                }
             })
             .catch(fetchError => {
                 console.error('Erreur fetch initiale:', fetchError);
